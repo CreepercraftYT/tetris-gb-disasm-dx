@@ -1,3 +1,5 @@
+SECTION "Song Data", ROMX[$4000], BANK[$2]
+
 EnvelopeData:
 	db $00, $00, $00, $00, $00, $00, $10, $00
 	db $0f, $00, $00, $11, $00, $0f, $f0, $01

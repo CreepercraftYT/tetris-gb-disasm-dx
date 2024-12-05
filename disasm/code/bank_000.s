@@ -182,8 +182,10 @@ SECTION "Header", ROM0[$134]
 	setcharmap main
 
 HeaderTitle::
-	db   "TETRIS", $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
-
+	db   "TETRISDX2", $00, $00, $00, $00, $00, $00
+HeaderCGBFlag::
+	db   CART_COMPATIBLE_GBC
+	
 	setcharmap new
 
 HeaderNewLicenseeCode::
@@ -191,15 +193,14 @@ HeaderNewLicenseeCode::
 
 HeaderSGBFlag::
 	db   $00
-
 HeaderCartridgeType::
-	db   $00
+	db   CART_ROM_MBC3_RAM_BAT_RTC
 
 HeaderROMSize::
-	db   $00
+	db   CART_ROM_512K
 
 HeaderRAMSize::
-	db   $00
+	db   CART_RAM_NONE
 
 HeaderDestinationCode::
 	db   $00
@@ -690,6 +691,8 @@ DemoSendPingsAndEndAfterAllStepsDone:
 
 
 DemoPollInput:
+	ld a, BANK_DEMO_AND_NIGHT_GRAPHICS
+	ld [rROMB0], a
 ; proceed if demo played
 	ldh  a, [hPrevOrCurrDemoPlayed]                                 ; $0542
 	and  a                                                          ; $0544
@@ -852,6 +855,10 @@ StoreBinHLwhenLCDFree:
 
 
 GameState0a_InGameInit:
+; switch to bank 1 for graphics data	
+	ld a, BANK_GRAPHICS_AND_LAYOUTS
+	ld [rROMB0], a
+
 ; turn off lcd and clear some in-game vars
 	call TurnOffLCD                                                 ; $1a07
 	xor  a                                                          ; $1a0a
@@ -880,7 +887,7 @@ GameState0a_InGameInit:
 	ld   de, Layout_BTypeInGame                                     ; $1a2b
 	ld   hl, hBTypeLevel                                            ; $1a2e
 	cp   GAME_TYPE_B_TYPE                                           ; $1a31
-	ld   a, LOW($9850)                                              ; $1a33
+	ld   a, LOW($9870)                                              ; $1a33
 	jr   z, .afterGameTypeCheck                                     ; $1a35
 
 ; is A-type
@@ -1001,7 +1008,7 @@ GameState0a_InGameInit:
 
 ; display high number in both screens
 	ldh  a, [hBTypeHigh]                                            ; $1abf
-	ld   hl, _SCRN0+$b0                                             ; $1ac1
+	ld   hl, _SCRN0+$d0                                             ; $1ac1
 	ld   [hl], a                                                    ; $1ac4
 	ld   h, HIGH(_SCRN1)                                            ; $1ac5
 	ld   [hl], a                                                    ; $1ac7

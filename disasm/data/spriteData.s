@@ -1,3 +1,5 @@
+SECTION "Sprite Data", ROMX[$4000], BANK[$1]
+
 ; last data table byte == $fd - x flip next tile
 ; last data table byte == $fe - skip next coords
 ; last data table byte == $ff - end

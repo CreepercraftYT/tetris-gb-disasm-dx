@@ -1,5 +1,9 @@
 
 GameState24_CopyrightDisplay:
+; switch to bank 1 for graphics data	
+	ld a, BANK_GRAPHICS_AND_LAYOUTS
+	ld [rROMB0], a
+	
 	call TurnOffLCD                                                 ; $0369
 
 	call CopyAsciiAndTitleScreenTileData                            ; $036c
@@ -7,6 +11,10 @@ GameState24_CopyrightDisplay:
 	call CopyLayoutToScreen0                                        ; $0372
 	call Clear_wOam                                                 ; $0375
 
+; switch to demo pieces bank
+	ld a, BANK_DEMO_AND_NIGHT_GRAPHICS
+	ld [rROMB0], a
+	
 ; set demo pieces
 	ld   hl, wDemoOrMultiplayerPieces                               ; $0378
 	ld   de, DemoPieces                                             ; $037b
@@ -63,6 +71,10 @@ GameState35_CopyrightCanContinue:
 
 
 GameState06_TitleScreenInit:
+; switch to bank 1 for graphics data	
+	ld a, BANK_GRAPHICS_AND_LAYOUTS
+	ld [rROMB0], a
+	
 	call TurnOffLCD                                                 ; $03ae
 
 ; reset some vars
@@ -116,7 +128,7 @@ GameState06_TitleScreenInit:
 	ld   hl, wOam                                                   ; $03f6
 	ld   [hl], $80                                                  ; $03f9
 	inc  l                                                          ; $03fb
-	ld   [hl], $10                                                  ; $03fc
+	ld   [hl], $08                                                 ; $03fc
 	inc  l                                                          ; $03fe
 	ld   [hl], TILE_CURSOR                                          ; $03ff
 
@@ -147,6 +159,10 @@ GameState06_TitleScreenInit:
 
 
 PlayDemo:
+;load demo pieces & inputs bank
+	ld a, BANK_DEMO_AND_NIGHT_GRAPHICS
+	ld [rROMB0], a
+
 	ld   a, GAME_TYPE_A_TYPE                                        ; $041f
 	ldh  [hGameType], a                                             ; $0421
 
@@ -342,10 +358,10 @@ GameState07_TitleScreenMain:
 
 ; set cursor X based on if 1 player or 2 players
 	and  a                                                          ; $04f7
-	ld   a, $10                                                     ; $04f8
+	ld   a, $08                                                    ; $04f8
 	jr   z, .setCursorX                                             ; $04fa
 
-	ld   a, $60                                                     ; $04fc
+	ld   a, $58                                                    ; $04fc
 
 .setCursorX:
 	ld   [wOam+OAM_X], a                                            ; $04fe

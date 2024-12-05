@@ -185,6 +185,10 @@ CopyHLtoDE_BCbytes:
 
 
 LoadAsciiAndMenuScreenGfx:
+; switch to graphics bank 1
+	ld a, BANK_GRAPHICS_AND_LAYOUTS
+	ld [rROMB0], a
+
 	call CopyAsciiTileData                                          ; $27ad
 
 ; further graphics (menu screen bits) after ascii from title screen
@@ -218,6 +222,10 @@ CopyAsciiTileData:
 
 
 CopyAsciiAndTitleScreenTileData:
+; switch to bank 1 for graphics data	
+	ld a, BANK_GRAPHICS_AND_LAYOUTS
+	ld [rROMB0], a
+
 	call CopyAsciiTileData                                          ; $27d7
 
 ; overruns into tile layout, actually $770 bytes
@@ -585,6 +593,10 @@ OamDmaFunction:
 ; difference between base y/x and the offset vars, is that base is the center of the tile
 ;   where y and x flipping flip around
 CopyToShadowOamBasedOnSpriteSpec:
+; switch to bank 1 for graphics data	
+	ld a, BANK_GRAPHICS_AND_LAYOUTS
+	ld [rROMB0], a
+	
 .nextStructInSpriteSpec:
 ; store address of sprite specs
 	ld   a, h                                                       ; $2a89

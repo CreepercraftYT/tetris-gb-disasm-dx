@@ -1,4 +1,4 @@
-SECTION "Demo Steps", ROMX[$62b0], BANK[$1]
+SECTION "Demo Steps", ROMX[$4000], BANK[$3]
 
 ; pair of bytes, input, then frames until next
 Demo2Inputs:
@@ -55,8 +55,7 @@ Demo1Inputs:
 	db $00, $00, $10, $3d, $00, $05, $80, $1f
 	
 
-
-SECTION "Demo Pieces", ROMX[$6450], BANK[$1]
+SECTION "Demo Pieces", ROMX[$4180], BANK[$3]
 
 DemoPieces::
 ; demo 2

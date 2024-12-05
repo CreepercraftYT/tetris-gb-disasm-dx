@@ -45,6 +45,10 @@ GameState26_ShuttleSceneInit:
 
 
 DisplayRocketScene:
+; switch to bank 1 for graphics data	
+	ld a, BANK_GRAPHICS_AND_LAYOUTS
+	ld [rROMB0], a
+
 ; display gfx with lcd off
     call TurnOffLCD                                              ; $11b2
     ld   hl, Gfx_RocketScene                                     ; $11b5
@@ -311,6 +315,10 @@ GameState2c_ShuttleSceneShowCongratulations:
 
 
 GameState2d_CongratsWaitingBeforeBTypeScore:
+; switch to bank 1 for graphics data	
+	ld a, BANK_GRAPHICS_AND_LAYOUTS
+	ld [rROMB0], a
+
 ; proceed when timer 0
     ldh  a, [hTimer1]                                            ; $1305
     and  a                                                       ; $1307
@@ -505,7 +513,11 @@ GameState32_RocketSceneShootFire:
 
 
 GameState33_RocketSceneEnd:
-; load gfx, clear sounds, and completed rows data
+; switch to bank 1 for graphics data	
+	ld a, BANK_GRAPHICS_AND_LAYOUTS
+	ld [rROMB0], a
+
+    ; load gfx, clear sounds, and completed rows data
     call TurnOffLCD                                              ; $13e5
     call LoadAsciiAndMenuScreenGfx                               ; $13e8
     call ThunkInitSound                                          ; $13eb

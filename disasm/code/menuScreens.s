@@ -8,6 +8,10 @@ GameState08_GameMusicTypeInit:
     ldh  [rIF], a                                                ; $144d
 
 GameMusicTypeInitWithoutDisablingSerialRegs:
+; switch to bank 1 for graphics data	
+	ld a, BANK_GRAPHICS_AND_LAYOUTS
+	ld [rROMB0], a
+
 ; turn off LCD, load screen, then clear oam
     call TurnOffLCD                                              ; $144f
     call LoadAsciiAndMenuScreenGfx                               ; $1452
@@ -286,6 +290,10 @@ GameState0e_GameTypeMain:
 
 
 GameState10_ATypeSelectionInit:
+; switch to bank 1 for graphics data	
+	ld a, BANK_GRAPHICS_AND_LAYOUTS
+	ld [rROMB0], a
+
 ; load gfx and data with lcd off, and clear oam
     call TurnOffLCD                                              ; $157b
     ld   de, Layout_ATypeSelectionScreen                         ; $157e
@@ -426,6 +434,10 @@ ATypeLevelsCoords:
 
 
 GameState12_BTypeSelectionInit:
+; switch to bank 1 for graphics data	
+	ld a, BANK_GRAPHICS_AND_LAYOUTS
+	ld [rROMB0], a
+
 ; load gfx, layout and clear oam while lcd off
     call TurnOffLCD                                              ; $1629
     ld   de, Layout_BTypeSelectionScreen                         ; $162c

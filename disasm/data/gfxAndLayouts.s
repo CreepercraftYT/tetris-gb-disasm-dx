@@ -1,4 +1,5 @@
-SECTION "Graphics and Layouts", ROM0[$323f]
+;SECTION "Graphics and Layouts", ROM0[$323f]
+SECTION "Graphics and Layouts", ROMX[$46DB], BANK[$1]
 
 Gfx_MenuScreens:
 	INCBIN "build/menuScreens.2bpp"
@@ -7,14 +8,15 @@ Gfx_MenuScreens:
 Layout_ATypeInGame:
 	INCBIN "data/layout_aTypeInGame.bin"
 
-STATIC_ASSERT $4000-@ == BANK_0_END_LEN
+;STATIC_ASSERT $4000-@ == BANK_0_END_LEN
 Layout_BTypeInGame::
-	INCBIN "data/layout_bTypeInGame.bin", 0, $4000-@
+	;INCBIN "data/layout_bTypeInGame.bin", 0, $4000-@
+	INCBIN "data/layout_bTypeInGame.bin"
 
     
-SECTION "ROM Bank $001", ROMX[$4000], BANK[$1]
+;SECTION "ROM Bank $001", ROMX[$4000], BANK[$1]
 
-	INCBIN "data/layout_bTypeInGame.bin", BANK_0_END_LEN
+	;INCBIN "data/layout_bTypeInGame.bin", BANK_0_END_LEN
 
 Gfx_Ascii::
 	INCBIN "build/ascii.1bpp"
@@ -28,7 +30,7 @@ Layout_Copyright::
 	INCBIN "data/layout_copyright.bin"
 
 Layout_TitleScreen::
-	INCBIN "data/layout_titleScreen.bin"
+	INCBIN "data/layout_titleScreen_day.bin"
 
 Layout_GameMusicTypeScreen::
 	INCBIN "data/layout_gameMusicTypeScreen.bin"
@@ -57,6 +59,28 @@ Layout_MarioScore::
 Layout_BricksAndLuigiScore::
 	INCBIN "data/layout_bricksAndLuigiScore.bin"
 
+;Layout_Options::
+;	INCBIN "data/layout_options.bin"
+
 Gfx_RocketScene::
 	INCBIN "build/rocketScene.2bpp"
 .end::
+
+SECTION "Sunrise/Sunset Layouts", ROMX[$46DB], BANK[$2]
+Layout_TitleScreen_Sunrise_Sunset::
+	INCBIN "data/layout_titleScreen_sunrise_set.bin"
+
+Layout_RocketScene_Sunrise_Sunset::
+	INCBIN "data/layout_rocketScene_sunrise_set.bin"
+.end
+
+SECTION "Night Layouts", ROMX[$46DB], BANK[$3]
+Layout_TitleScreen_Sunrise_Sunset::
+    INCBIN "data/layout_titleScreen_night.bin"
+	
+Layout_RocketScene_Sunrise_Sunset::
+	INCBIN "data/layout_rocketScene_night.bin"
+
+GameScreenLayout_Dancers_Night::
+	INCBIN "data/gameScreenLayout_dancers_night.bin"
+.end

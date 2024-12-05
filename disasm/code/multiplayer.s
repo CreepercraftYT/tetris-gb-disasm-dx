@@ -181,7 +181,11 @@ GameState16_MarioLuigiScreenInit:
     jr   nz, .loop                                               ; $0694
 
 .cont:
-; load screen while lcd off
+; switch to bank 1 for graphics data	
+	ld a, BANK_GRAPHICS_AND_LAYOUTS
+	ld [rROMB0], a
+
+    ; load screen while lcd off
     call TurnOffLCD                                              ; $0696
     call LoadAsciiAndMenuScreenGfx                               ; $0699
     ld   de, Layout_MarioLuigiScreen                             ; $069c
@@ -485,6 +489,10 @@ Set2PlayerHighCoords:
 
 
 GameState18_2PlayerInGameInit:
+; switch to bank 1 for graphics data	
+	ld a, BANK_GRAPHICS_AND_LAYOUTS
+	ld [rROMB0], a
+
     call TurnOffLCD                                              ; $0825
 
 .initWithoutTurningOffLCD:
@@ -2166,6 +2174,10 @@ ClearPushStartText:
 
 
 LoadWinnerLoserScreen:
+; switch to bank 1 for graphics data	
+	ld a, BANK_GRAPHICS_AND_LAYOUTS
+	ld [rROMB0], a
+
 ; load gfx with LCD off
     call TurnOffLCD                                              ; $0f6f
     ld   hl, Gfx_RocketScene                                     ; $0f72

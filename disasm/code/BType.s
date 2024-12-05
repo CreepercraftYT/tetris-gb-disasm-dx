@@ -148,6 +148,9 @@ GameState22_DancersInit:
     ret  nz                                                      ; $1dd1
 
 ; load dancers layout and clear oam
+; change the rom bank first!
+	ld a, BANK_GRAPHICS_AND_LAYOUTS
+	ld [rROMB0], a
     ld   hl, wGameScreenBuffer+2                                 ; $1dd2
     ld   de, GameScreenLayout_Dancers                            ; $1dd5
     call CopyToGameScreenUntilByteReadEquFFhThenSetVramTransfer  ; $1dd8
