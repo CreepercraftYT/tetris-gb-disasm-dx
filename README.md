@@ -1,7 +1,10 @@
 # Tetris "DX" 2
 This is a Better version of my Gameboy Tetris Colorization hack, which i jokingly nicknamed 'Tetris "DX"'.
+
 This version will include an in-game clock and palettes changing depending on the time of the day!
-It will also look a lot more like the Original Tetris DX
+
+It will also look a lot more like the Original Tetris DX.
+
 W.I.P
 
 ## Common
