@@ -7,6 +7,7 @@ It will also look a lot more like the Original Tetris DX.
 
 W.I.P
 
+Hard Mode ("Heart" mode) is now enabled by holding Up on the title screen
 ## Common
 * Place `tetris.gb` in the `tools/` directory, and `web/` directory
 * Former is used for scripts, and `tools/cmp.sh`, and the latter for web visualisations
