@@ -1,5 +1,8 @@
-# Tetris MBC5
-This fork & branch of vinheim3's Tetris disassembly aims to create a base for possible future modding endeavors. The base game has very little room left over to implement anything worthwhile, so this branch restructures the game to allow for additional code and assets.
+# Tetris "DX" 2
+This is a Better version of my Gameboy Tetris Colorization hack, which i jokingly nicknamed 'Tetris "DX"'.
+This version will include an in-game clock and palettes changing depending on the time of the day!
+It will also look a lot more like the Original Tetris DX
+W.I.P
 
 ## Common
 * Place `tetris.gb` in the `tools/` directory, and `web/` directory
@@ -26,6 +29,7 @@ This fork & branch of vinheim3's Tetris disassembly aims to create a base for po
   * `docs` - reference images, and flow .drawio
 
 ## ROM Bank Structure
+(Leftover space is outdated)
 * `Bank 0`
   * Gamestate and update logic
   * GFX pipeline
@@ -38,10 +42,12 @@ This fork & branch of vinheim3's Tetris disassembly aims to create a base for po
   * `Leftover space - $08b8 (2232) bytes`
 * `Bank 2`
   * Song Data
+  * Sunrise/Sunset Layouts
   * `Leftover space - $2e05 (11787) bytes`
 * `Bank 3`
   * Demo Mode button inputs
   * Demo mode piece selections
+  * Night Layouts
   * `Leftover space - $3e50 (15952) bytes`
 
 `Total space added - $8027 (32807) bytes`
