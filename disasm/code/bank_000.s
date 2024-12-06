@@ -349,9 +349,9 @@ VBlankInterruptHandler:
 	inc  [hl]                                                       ; $01fe
 
 ; clear scroll regs, and set interrupt as handled
-	xor  a                                                          ; $01ff
-	ldh  [rSCX], a                                                  ; $0200
-	ldh  [rSCY], a                                                  ; $0202
+;	xor  a                 why though?                              ; $01ff
+;	ldh  [rSCX], a                                                  ; $0200
+;	ldh  [rSCY], a                                                  ; $0202
 
 	inc  a                                                          ; $0204
 	ldh  [hVBlankInterruptFinished], a                              ; $0205
@@ -549,6 +549,10 @@ MainLoop:
 	ld   b, hTimerEnd-hTimers                                       ; $02d9
 
 .nextTimer:
+; if options menu, ignore the timer
+    ld a, [hIsOptionMenu]
+	cp a, 1
+	jr z, .toNextTimer 
 	ld   a, [hl]                                                    ; $02db
 	and  a                                                          ; $02dc
 	jr   z, .toNextTimer                                            ; $02dd

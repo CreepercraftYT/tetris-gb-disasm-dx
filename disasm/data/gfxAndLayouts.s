@@ -66,7 +66,7 @@ Gfx_RocketScene::
 	INCBIN "build/rocketScene.2bpp"
 .end::
 
-SECTION "Sunrise/Sunset Layouts", ROMX[$46DB], BANK[$2]
+SECTION "Sunrise/Sunset Layouts", ROMX[$5200], BANK[$2]
 Layout_TitleScreen_Sunrise_Sunset::
 	INCBIN "data/layout_titleScreen_sunrise_set.bin"
 
@@ -74,11 +74,11 @@ Layout_RocketScene_Sunrise_Sunset::
 	INCBIN "data/layout_rocketScene_sunrise_set.bin"
 .end
 
-SECTION "Night Layouts", ROMX[$46DB], BANK[$3]
-Layout_TitleScreen_Sunrise_Sunset::
+SECTION "Night Layouts", ROMX[$4200], BANK[$3]
+Layout_TitleScreen_Night::
     INCBIN "data/layout_titleScreen_night.bin"
 	
-Layout_RocketScene_Sunrise_Sunset::
+Layout_RocketScene_Night::
 	INCBIN "data/layout_rocketScene_night.bin"
 
 GameScreenLayout_Dancers_Night::

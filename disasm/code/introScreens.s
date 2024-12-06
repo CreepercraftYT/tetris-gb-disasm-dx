@@ -269,7 +269,7 @@ GameState07_TitleScreenMain:
 ; otherwise state is invalid
 	xor  a                                                          ; $049d
 	ldh  [hSerialInterruptHandled], a                               ; $049e
-	jr   .multiplayerInvalid                                        ; $04a0
+	jp   .multiplayerInvalid                                        ; $04a0
 
 .checkButtonsPressed:
 ; buttons pressed in B, is 2 player in A
@@ -282,15 +282,46 @@ GameState07_TitleScreenMain:
 	jr   nz, .flipNumPlayersOption                                  ; $04a9
 
 	bit  PADB_RIGHT, b                                              ; $04ab
-	jr   nz, .pressedRight                                          ; $04ad
+	jp   nz, .pressedRight                                          ; $04ad
 
 	bit  PADB_LEFT, b                                               ; $04af
-	jr   nz, .pressedLeft                                           ; $04b1
+	jp   nz, .pressedLeft                                           ; $04b1
 
-; start to select an option, other buttons are invalid
-	bit  PADB_START, b                                              ; $04b3
-	ret  z                                                          ; $04b5
+	bit PADB_DOWN, b
+    jp nz, .pressedDown
 
+	bit PADB_UP, b
+	jp nz, .pressedUp
+
+; start or A to select an option, other buttons are invalid
+; if options menu, ignore this
+    ld c, a
+    ld a, [hIsOptionMenu]
+	cp a, 1
+	jp z, .optionMenu
+	ld a, c
+	bit  PADB_START, b   
+	jr nz, :+
+	bit  PADB_A, b                                                  ; $04b3
+	ret  z
+	                                                                ; $04b5
+; if options, scroll down the screen and jump to the menu handler
+    cp a, 2
+	jr nz, .playerChecks
+.scrollLoop
+	ld b, $ff
+	ld c, $2 
+	ld hl, rSCY
+:	dec b
+	jr nz, :-
+	dec c
+	jr nz, :-
+	inc [hl]
+	ld a, [hl]
+	cp a, $80
+	jp z, .optionMenu
+	jr .scrollLoop
+.playerChecks
 ; if 1 player, set 1player state in A
 	and  a                                                          ; $04b6
 	ld   a, GS_GAME_MUSIC_TYPE_INIT                                 ; $04b7
@@ -339,14 +370,14 @@ GameState07_TitleScreenMain:
 
 .is1Player:
 	push af                                                         ; $04e7
-; if down held while on title screen, set hard mode
+; if up held while on title screen, set hard mode
 	ldh  a, [hButtonsHeld]                                          ; $04e8
-	bit  PADB_DOWN, a                                               ; $04ea
-	jr   z, .afterDownCheck                                         ; $04ec
+	bit  PADB_UP, a                                               ; $04ea
+	jr   z, .afterUpCheck                                         ; $04ec
 
 	ldh  [hIsHardMode], a                                           ; $04ee
 
-.afterDownCheck:
+.afterUpCheck:
 	pop  af                                                         ; $04f0
 	jr   .setGameState                                              ; $04f1
 
@@ -356,21 +387,41 @@ GameState07_TitleScreenMain:
 .setNumPlayersOpt:
 	ldh  [hIs2Player], a                                            ; $04f5
 
-; set cursor X based on if 1 player or 2 players
-	and  a                                                          ; $04f7
-	ld   a, $08                                                    ; $04f8
-	jr   z, .setCursorX                                             ; $04fa
-
-	ld   a, $58                                                    ; $04fc
+; set cursor X and Y based on if 1 player, 2 players or options
+; again, ignore if options menu
+    ld c, a
+    ld a, [hIsOptionMenu]
+    cp a, 1
+	jr z, .optionMenu
+	ld a, c
+	cp   a, $00
+	jr nz, :+
+	ld a, $80
+    ld   [wOam+OAM_Y], a                                                    ; $04f7
+ 	ld   a, $08
+	jr   z, .setCursorX                                                    ; $04f8
+:   cp a, $01
+    jr nz, :+
+	ld a, $80
+    ld   [wOam+OAM_Y], a                                                                ; $04fa
+	ld   a, $58
+	jr   z, .setCursorX
+:   ld a, $90
+    ld   [wOam+OAM_Y], a
+	ld a, $30                                                                     ; $04fc
 
 .setCursorX:
 	ld   [wOam+OAM_X], a                                            ; $04fe
 	ret                                                             ; $0501
 
+; ignore all the following if on options menu
+    ld a, [hIsOptionMenu]
+    cp a, 1
+	jr z, .optionMenu
 .pressedRight:
 ; ret if already 2 player
-	and  a                                                          ; $0502
-	ret  nz                                                         ; $0503
+	cp a, $01                                                         ; $0502
+	ret  z                                                         ; $0503
 
 	xor  a                                                          ; $0504
 	jr   .flipNumPlayersOption                                      ; $0505
@@ -378,9 +429,134 @@ GameState07_TitleScreenMain:
 .pressedLeft:
 ; ret if already 1 player
 	and  a                                                          ; $0507
-	ret  z                                                          ; $0508
+	ret  z
+    jr   .multiplayerInvalid                                        ; $0508
+
+.pressedDown
+; move the cursor to the "Options" tag
+    ld a, $02
+	jr .setNumPlayersOpt
+
+.pressedUp
+; move cursor back to the "1PLAYER/2PLAYERS" line
+    xor a
+	jr .setNumPlayersOpt
 
 .multiplayerInvalid:
 ; set to 1 player
 	xor  a                                                          ; $0509
 	jr   .setNumPlayersOpt                                          ; $050a
+
+.optionMenu
+	ld a, 1
+	ld [hIsOptionMenu], a
+	ld a, $08
+	ld   [wOam+OAM_X], a  
+; set cursor Y based on selected option
+    ld a, [hSelectedOption]
+    cp   a, $00
+    jr nz, :+                                                 ; $04f7
+    ld   a, $28
+    jr   z, .setCursorY                                                    ; $04f8
+:   cp a, $01
+    jr nz, :+                                                              ; $04fa
+    ld   a, $38
+    jr   z, .setCursorY
+:   ld a, $48                                                                     ; $04fc
+
+.setCursorY:
+    ld   [wOam+OAM_Y], a                                            ; $04fe  
+      
+.checkButtonsPressedOptions
+	bit PADB_DOWN, b
+    jp nz, .pressedDownOptions
+
+	bit PADB_UP, b
+	jp nz, .pressedUpOptions
+
+	bit PADB_B, b
+	jp nz, .pressedBOptions
+
+	bit PADB_A, b
+	jp nz, .pressedAOptions
+
+	ret z
+.pressedDownOptions
+	ld hl, hSelectedOption
+; if already at the last option, return
+	ld a, [hl]
+	cp a, 2
+	ret z
+	inc [hl]
+	ret 
+
+.pressedUpOptions
+; if already at the first option, go back
+	ld hl, hSelectedOption
+	ld a, [hl]
+	cp a, 0
+    jr z, .pressedBOptions
+	dec [hl]
+	ret 
+
+.pressedBOptions
+; leave the option menu
+.scrollLoopBack
+	ld b, $ff
+	ld c, $2 
+	ld hl, rSCY
+:	dec b
+	jr nz, :-
+	dec c
+	jr nz, :-
+	dec [hl]
+	ld a, [hl]
+	cp a, $00
+	jp z, .doneScrolling
+	jr .scrollLoopBack
+.doneScrolling
+	ld a, 8
+	ld   [wOam+OAM_X], a  
+	ld a, $80
+	ld   [wOam+OAM_Y], a  
+	xor a
+	ld [hIsOptionMenu], a
+	ret
+
+.pressedAOptions
+; toggle the option on or off
+	ld hl, hSelectedOption
+	ld a, [hl]
+	ld h, HIGH(wOptionLights)
+	ld b, LOW(wOptionLights)
+	add a, b
+	ld l, a
+    ld a, [hl]
+	inc a
+	and a, 1
+	ld [hl], a
+; change the toggle tile
+	ld e, a
+	ld hl, hSelectedOption
+	ld a, [hl]
+; get the VRAM address
+	ld h, HIGH(OPTION_LIGHTS)
+	ld b, LOW(OPTION_LIGHTS)
+	ld c, $40
+	inc a
+	ld d, a
+	ld a, b
+:   dec d
+    jr z, :+
+    add a, c
+	jr :-
+:   ld l, a
+; get the toggle back in A
+    ld a, e
+	ld b, "*"
+; get the correct tile
+	add a, b
+; load it
+    ld [hl], a
+; return, this is for testing
+    ret

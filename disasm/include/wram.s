@@ -206,3 +206,12 @@ wNoiseEffectFrameCounterThreshold:: ; dffb
     db
 wNoiseEffectMiscCounter:: ; $dffc
     db
+
+; option toggles
+wOptionLights::
+    ds 1
+wOptionColors::
+    ds 1 
+wOptionDayNightCycle::
+    ds 1
+.end::

@@ -216,6 +216,10 @@ h5GamesFinishedTimer:: ; $ffc6
     db
 
     endu
+hIsOptionMenu::
+    db
+hSelectedOption::
+    db
 
 hMustEnterHighScore:: ; $ffc7
     db
