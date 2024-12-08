@@ -1741,7 +1741,7 @@ UpdateMusic:
 ; push sound byte address (dfx4), hl = tempo addr
 	push hl                                                         ; $6c77
 	ld   de, wSongTempoAddr                                         ; $6c78
-	ld   a, [de]                                                    ; $6c7b
+    ld a, [de]                                               ; $6c7b
 	ld   l, a                                                       ; $6c7c
 	inc  de                                                         ; $6c7d
 	ld   a, [de]                                                    ; $6c7e

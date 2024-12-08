@@ -42,7 +42,13 @@ GameState24_CopyrightDisplay:
 
 
 GameState25_CopyrightWaiting:
-; wait for timer, set a new one, then go to next state
+; check for inputs and skip copyright screen or wait for timer, set a new one, then go to next state
+    ldh  a, [hButtonsPressed]                                       ; $03a0
+	and  a                                                          ; $03a2
+	jr   nz, GameState35_CopyrightCanContinue                                         ; $03a3
+	ldh  a, [hButtonsHeld]                                       ; $03a0
+	and  a                                                          ; $03a2
+	jr   nz, GameState35_CopyrightCanContinue 
 	ldh  a, [hTimer1]                                               ; $0393
 	and  a                                                          ; $0395
 	ret  nz                                                         ; $0396
@@ -123,8 +129,27 @@ GameState06_TitleScreenInit:
 	jr   nz, .displayBlackRow                                       ; $03eb
 
 ; set display and oam
-	ld   de, Layout_TitleScreen                                     ; $03ed
-	call CopyLayoutToScreen0                                        ; $03f0
+; set correct bank based on time
+    ld a, [sIsDay_DuskDawn_Night]
+	inc a
+	ld [rROMB0], a
+	cp a, 2
+	jr z, .sunriseOrSunset
+	cp a, 3
+	jr z, .night
+	ld   de, Layout_TitleScreen  
+	jr .copy         
+.sunriseOrSunset
+	ld   de, Layout_TitleScreen_Sunrise_Sunset
+	jr .copy
+.night 
+	ld   de, Layout_TitleScreen_Night    
+.copy                     ; $03ed
+	call CopyLayoutToScreen0          
+	xor a
+	; set the bank back
+	inc a
+	ld [rROMB0], a                             ; $03f0
 	call Clear_wOam                                                 ; $03f3
 
 ; cursor OAM
@@ -615,7 +640,7 @@ GameState07_TitleScreenMain:
 .waitVRAMA
     ldh a, [rSTAT]
     and STATF_BUSY
-    jr nz, .waitVRAM1
+    jr nz, .waitVRAMA
 	pop af
     ld [hl], a
 

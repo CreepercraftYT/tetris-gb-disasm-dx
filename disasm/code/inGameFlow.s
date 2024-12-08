@@ -1399,7 +1399,13 @@ InGameAddPieceToVram:
 ; store tile index into screen 0
     ld   a, [hl]
 ; convert from object tile to bg tile
-    call ConvertFromObjectTileToBGTile                                                 ; $25c3
+    call ConvertFromObjectTileToBGTile 
+    push af
+.waitVRAMB
+    ldh a, [rSTAT]
+    and STATF_BUSY
+    jr nz, .waitVRAMB
+	pop af                                                ; $25c3
     ld   [de], a                                                 ; $25c4
 
 ; as well as game screen buffer

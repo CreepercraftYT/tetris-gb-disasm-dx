@@ -1935,7 +1935,7 @@ ConvertHexToDec::
 UpdateClock::
 	ld hl, $980f
 	ld e, 2
-.afterPrepare
+.doHours
 	ld a, $0A
 	ld [$4000], a
 	ld a, [$a000]
@@ -1949,11 +1949,20 @@ UpdateClock::
 	add a, 10
 	ld c, a
 	ld a, b
+	push af
+.waitVRAMC
+    ldh a, [rSTAT]
+    and STATF_BUSY
+    jr nz, .waitVRAMC
+	pop af
 	ldi [hl], a
 	ld a, c
 	ldi [hl], a
 	ld a, ":"
 	ldi [hl], a
+	ld a, [$a000]
+    jr .updateSIsDay_DuskDawn_Night
+.doMinutes
 	ld a, $09
 	ld [$4000], a
 	ld a, [$a000]
@@ -1971,12 +1980,47 @@ UpdateClock::
 	ld a, c
 	ldi [hl], a
 	dec e
-	ret z
+	jr z, .setSramBank
 	ld a, 4
 	add a, h
 	ld h, a
-	jr .afterPrepare 
-
+	jr .doHours 
+.setSramBank
+	ld a, 0
+	ld [$4000], a
+	ret 
+.updateSIsDay_DuskDawn_Night
+	ld b, a
+	ld a, [hIsOptionMenu]
+	cp a, 1
+	jr z, .doMinutes
+	ld a, b
+	cp a, SUNRISE_START
+    jr c, .isNight
+	cp a, DAY_START
+    jr c, .isDuskOrDawn
+	cp a, SUNSET_START
+	jr c, .isDay
+	cp a, NIGHT_START
+	jr c, .isDuskOrDawn
+	jr .isNight
+.isDay 
+	ld a, 00
+	ld [$4000], a
+	ld [sIsDay_DuskDawn_Night], a
+	jr .doMinutes
+.isDuskOrDawn
+	ld a, 0
+	ld [$4000], a
+	ld a, 01
+	ld [sIsDay_DuskDawn_Night], a
+	jr .doMinutes
+.isNight
+	ld a, 0
+	ld [$4000], a
+	ld a, 02
+	ld [sIsDay_DuskDawn_Night], a
+    jr .doMinutes
 ColonTile::
 	db $00, $00, $18, $18, $18, $18, $00, $00, $00, $00, $18, $18, $18, $18, $00, $00 
 INCLUDE "code/gfx.s"

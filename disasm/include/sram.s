@@ -6,3 +6,7 @@ sCurrMonth::
 sCurrYear::
     ds 2
 .end::
+; Time Of Day
+sIsDay_DuskDawn_Night::
+    ds 1
+.end::
