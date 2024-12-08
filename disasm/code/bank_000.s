@@ -200,7 +200,7 @@ HeaderROMSize::
 	db   CART_ROM_512K
 
 HeaderRAMSize::
-	db   CART_RAM_NONE
+	db   CART_RAM_64K
 
 HeaderDestinationCode::
 	db   $00
@@ -319,6 +319,7 @@ VBlankInterruptHandler:
 	call ProcessScoreUpdatesAfterBTypeLevelDone                     ; $01d2
 	call hOamDmaFunction                                            ; $01d5
 	call DisplayHighScoresAndNamesForLevel                          ; $01d8
+	call UpdateClock
 
 ; if just added drops to score..
 	ld   a, [wATypeJustAddedDropsToScore]                           ; $01db
@@ -365,6 +366,8 @@ VBlankInterruptHandler:
 
 
 Begin2:
+	ld a, $0a
+	ld [$0000], a
 	xor  a                                                          ; $020c
 	ld   hl, $dfff                                                  ; $020d
 
@@ -891,7 +894,7 @@ GameState0a_InGameInit:
 	ld   de, Layout_BTypeInGame                                     ; $1a2b
 	ld   hl, hBTypeLevel                                            ; $1a2e
 	cp   GAME_TYPE_B_TYPE                                           ; $1a31
-	ld   a, LOW($9870)                                              ; $1a33
+	ld   a, LOW($98AF)                                              ; $1a33
 	jr   z, .afterGameTypeCheck                                     ; $1a35
 
 ; is A-type
@@ -1012,7 +1015,7 @@ GameState0a_InGameInit:
 
 ; display high number in both screens
 	ldh  a, [hBTypeHigh]                                            ; $1abf
-	ld   hl, _SCRN0+$d0                                             ; $1ac1
+	ld   hl, _SCRN0+$b1                                            ; $1ac1
 	ld   [hl], a                                                    ; $1ac4
 	ld   h, HIGH(_SCRN1)                                            ; $1ac5
 	ld   [hl], a                                                    ; $1ac7
@@ -1919,6 +1922,63 @@ ClearScoreCategoryVarsAndTotalScore:
 
 
 ; also has PollInput
+
+ConvertHexToDec::
+	xor a
+.convertLoop:
+    inc a
+    daa
+    dec b
+    jr nz, .convertLoop
+	ret
+
+UpdateClock::
+	ld hl, $980f
+	ld e, 2
+.afterPrepare
+	ld a, $0A
+	ld [$4000], a
+	ld a, [$a000]
+	ld b, a
+;	call ConvertHexToDec
+	ld b, -1
+	.loopa
+	inc b
+	sub 10
+	jr nc, .loopa
+	add a, 10
+	ld c, a
+	ld a, b
+	ldi [hl], a
+	ld a, c
+	ldi [hl], a
+	ld a, ":"
+	ldi [hl], a
+	ld a, $09
+	ld [$4000], a
+	ld a, [$a000]
+	ld b, a
+;	call ConvertHexToDec
+	ld b, -1
+	.loopb
+	inc b
+	sub 10
+	jr nc, .loopb
+	add a, 10
+	ld c, a
+	ld a, b
+	ldi [hl], a
+	ld a, c
+	ldi [hl], a
+	dec e
+	ret z
+	ld a, 4
+	add a, h
+	ld h, a
+	jr .afterPrepare 
+
+ColonTile::
+	db $00, $00, $18, $18, $18, $18, $00, $00, $00, $00, $18, $18, $18, $18, $00, $00 
 INCLUDE "code/gfx.s"
 
 INCLUDE "data/spriteData.s"

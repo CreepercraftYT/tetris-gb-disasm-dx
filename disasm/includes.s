@@ -45,6 +45,9 @@ charmap "*", $26
 charmap "<3", $27
 charmap ".", $29
 charmap " ", $2f
+charmap "v", $a1
+charmap ":", $fe
+charmap ">", $58
 
 ; pipe box
 charmap "'//", $61

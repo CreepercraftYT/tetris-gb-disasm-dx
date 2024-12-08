@@ -1397,14 +1397,17 @@ InGameAddPieceToVram:
     jr   nz, .waitUntilVramAndOamFree                            ; $25c1
 
 ; store tile index into screen 0
-    ld   a, [hl]                                                 ; $25c3
+    ld   a, [hl]
+; convert from object tile to bg tile
+    call ConvertFromObjectTileToBGTile                                                 ; $25c3
     ld   [de], a                                                 ; $25c4
 
 ; as well as game screen buffer
     ld   a, d                                                    ; $25c5
     add  HIGH(wGameScreenBuffer-_SCRN0)                          ; $25c6
     ld   d, a                                                    ; $25c8
-    ld   a, [hl+]                                                ; $25c9
+    ld   a, [hl+]     
+    call ConvertFromObjectTileToBGTile                                           ; $25c9
     ld   [de], a                                                 ; $25ca
     inc  l                                                       ; $25cb
     dec  b                                                       ; $25cc
@@ -1418,4 +1421,22 @@ InGameAddPieceToVram:
     ld   hl, wSpriteSpecs                                        ; $25d3
     ld   [hl], SPRITE_SPEC_HIDDEN                                ; $25d6
     ret                                                          ; $25d8
-    
+ConvertFromObjectTileToBGTile:
+    push hl
+    ld hl, PieceTileConversionLookUpTable
+    cp a, $43
+    jr nc, .subForFxValues
+    sub a, $3f
+    jr .getOffset
+.subForFxValues
+    sub a, $f1
+.getOffset
+    add a, l
+    ld l, a
+    ld a, [hl]
+    pop hl
+    ret
+
+
+PieceTileConversionLookUpTable:
+    db $8f, $89, $8a, $8b, $80, $81, $82, $83, $84, $85, $86, $88

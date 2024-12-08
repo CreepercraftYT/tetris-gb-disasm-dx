@@ -59,6 +59,9 @@ GameState35_CopyrightCanContinue:
 	ldh  a, [hButtonsPressed]                                       ; $03a0
 	and  a                                                          ; $03a2
 	jr   nz, .setNewState                                           ; $03a3
+	ldh  a, [hButtonsHeld]                                       ; $03a0
+	and  a                                                          ; $03a2
+	jr   nz, .setNewState 
 
 	ldh  a, [hTimer1]                                               ; $03a5
 	and  a                                                          ; $03a7
@@ -264,7 +267,7 @@ GameState07_TitleScreenMain:
 ; ie auto-start for passive GB
 	ldh  a, [hMultiplayerPlayerRole]                                ; $0498
 	and  a                                                          ; $049a
-	jr   nz, .setGameStateTo2ah                                     ; $049b
+	jp   nz, .setGameStateTo2ah                                     ; $049b
 
 ; otherwise state is invalid
 	xor  a                                                          ; $049d
@@ -278,8 +281,15 @@ GameState07_TitleScreenMain:
 	ldh  a, [hIs2Player]                                            ; $04a5
 
 ; select flips between 2 options, left/right does as intended
+; ignore all the following if on options menu
+    ld c, a
+    ld a, [hIsOptionMenu]
+    cp a, 1
+	ld a, c
+    jp z, .optionMenu
+
 	bit  PADB_SELECT, b                                             ; $04a7
-	jr   nz, .flipNumPlayersOption                                  ; $04a9
+	jp   nz, .flipNumPlayersOption                                  ; $04a9
 
 	bit  PADB_RIGHT, b                                              ; $04ab
 	jp   nz, .pressedRight                                          ; $04ad
@@ -306,7 +316,7 @@ GameState07_TitleScreenMain:
 	ret  z
 	                                                                ; $04b5
 ; if options, scroll down the screen and jump to the menu handler
-    cp a, 2
+:   cp a, 2
 	jr nz, .playerChecks
 .scrollLoop
 	ld b, $ff
@@ -414,10 +424,6 @@ GameState07_TitleScreenMain:
 	ld   [wOam+OAM_X], a                                            ; $04fe
 	ret                                                             ; $0501
 
-; ignore all the following if on options menu
-    ld a, [hIsOptionMenu]
-    cp a, 1
-	jr z, .optionMenu
 .pressedRight:
 ; ret if already 2 player
 	cp a, $01                                                         ; $0502
@@ -434,6 +440,9 @@ GameState07_TitleScreenMain:
 
 .pressedDown
 ; move the cursor to the "Options" tag
+; if already at it, move down to the options menu
+    cp a, 2
+	jp z, .scrollLoop
     ld a, $02
 	jr .setNumPlayersOpt
 
@@ -462,7 +471,11 @@ GameState07_TitleScreenMain:
     jr nz, :+                                                              ; $04fa
     ld   a, $38
     jr   z, .setCursorY
-:   ld a, $48                                                                     ; $04fc
+:   cp a, $02
+    jr nz, :+  
+    ld a, $48   
+	jr   z, .setCursorY 
+:   ld a, $70                                                                 ; $04fc
 
 .setCursorY:
     ld   [wOam+OAM_Y], a                                            ; $04fe  
@@ -479,13 +492,51 @@ GameState07_TitleScreenMain:
 
 	bit PADB_A, b
 	jp nz, .pressedAOptions
-
+    push bc
+.updateClock::
+	ld hl, $9b81
+	ld a, $0A
+	ld [$4000], a
+	ld a, [$a000]
+	ld b, a
+;	call ConvertHexToDec
+	ld b, -1
+	.loopa
+	inc b
+	sub 10
+	jr nc, .loopa
+	add a, 10
+	ld c, a
+	ld a, b
+	ldi [hl], a
+	ld a, c
+	ldi [hl], a
+	ld a, ":"
+	ldi [hl], a
+	ld a, $09
+	ld [$4000], a
+	ld a, [$a000]
+	ld b, a
+;	call ConvertHexToDec
+	ld b, -1
+	.loopb
+	inc b
+	sub 10
+	jr nc, .loopb
+	add a, 10
+	ld c, a
+	ld a, b
+	ldi [hl], a
+	ld a, c
+	ldi [hl], a
+    pop bc
+	bit PADB_A, b
 	ret z
 .pressedDownOptions
 	ld hl, hSelectedOption
 ; if already at the last option, return
 	ld a, [hl]
-	cp a, 2
+	cp a, 3
 	ret z
 	inc [hl]
 	ret 
@@ -515,18 +566,21 @@ GameState07_TitleScreenMain:
 	jp z, .doneScrolling
 	jr .scrollLoopBack
 .doneScrolling
-	ld a, 8
+	ld a, $30
 	ld   [wOam+OAM_X], a  
-	ld a, $80
+	ld a, $90
 	ld   [wOam+OAM_Y], a  
 	xor a
 	ld [hIsOptionMenu], a
+	ld a, 2
 	ret
 
 .pressedAOptions
 ; toggle the option on or off
 	ld hl, hSelectedOption
 	ld a, [hl]
+	cp a, 3
+    jr z, .setTime
 	ld h, HIGH(wOptionLights)
 	ld b, LOW(wOptionLights)
 	add a, b
@@ -557,6 +611,207 @@ GameState07_TitleScreenMain:
 ; get the correct tile
 	add a, b
 ; load it
+    push af
+.waitVRAMA
+    ldh a, [rSTAT]
+    and STATF_BUSY
+    jr nz, .waitVRAM1
+	pop af
     ld [hl], a
-; return, this is for testing
+
+    ret
+.setTime
+; invert the palette
+	ld a, %00011011
+	ld [rBGP], a
+	ld [rOBP0], a
+; Open SRAM
+	ld a, $0A
+	ld [$0000], a
+.hours
+; Access Hour Register
+	ld a, $0a
+	ld [$4000], a
+	ld a, $68
+	ld   [wOam+OAM_Y], a  
+	ld a, $14
+	ld   [wOam+OAM_X], a 
+	ld a, "v"
+	ld   [wOam+OAM_TILE_IDX], a 
+	ld a, [$a000]
+	push af
+	call PollInput
+	ldh  a, [hButtonsPressed]                                       ; $04a2
+	ld   b, a                                                       ; $04a4
+	pop af
+
+	bit  PADB_RIGHT, b                                              ; $04ab
+	jp   nz, .minutes                                          ; $04ad
+
+	bit PADB_DOWN, b
+    jp nz, .decreaseHours
+
+	bit PADB_UP, b
+	jp nz, .increaseHours
+
+	bit PADB_B, b
+	jp nz, .exit
+	jr z, .hours
+.decreaseHours
+	dec a
+	cp a, $ff
+    jr nz, .updateDecH
+	ld a, 23
+.updateDecH
+	ld [$a000], a
+  ; in: a: value <100
+  ; out: a: units; b: tens
+    ld b, -1
+.separateTensDecH
+    inc b
+    sub 10
+    jr nc, .separateTensDecH
+    add a, 10
+    ld hl, $9b81
+	push af
+.waitVRAM1
+    ldh a, [rSTAT]
+    and STATF_BUSY
+    jr nz, .waitVRAM1
+	pop af
+    ld c, a
+    ld a, b
+    ldi [hl], a
+    ld a, c
+    ld [hl], a
+    jr .hours
+.increaseHours
+	inc a
+	cp a, 24
+    jr nz, .updateIncH
+	ld a, 0
+.updateIncH
+	ld [$a000], a
+  ; in: a: value <100
+  ; out: a: units; b: tens
+    ld b, -1
+.separateTensIncH
+    inc b
+    sub 10
+    jr nc, .separateTensIncH
+    add a, 10
+    ld hl, $9b81
+	push af
+.waitVRAM2
+    ldh a, [rSTAT]
+    and STATF_BUSY
+    jr nz, .waitVRAM2
+	pop af
+    ld c, a
+    ld a, b
+    ldi [hl], a
+    ld a, c
+    ld [hl], a
+    jr .hours
+.minutes
+	; Access Minute Register
+	ld a, $09
+	ld [$4000], a
+	ld a, $68
+	ld   [wOam+OAM_Y], a  
+	ld a, $2c
+	ld   [wOam+OAM_X], a 
+	ld a, "v"
+	ld   [wOam+OAM_TILE_IDX], a 
+	ld a, [$a000]
+	push af
+	call PollInput
+	ldh  a, [hButtonsPressed]                                       ; $04a2
+	ld   b, a                                                       ; $04a4
+	pop af
+
+	bit  PADB_LEFT, b                                              ; $04ab
+	jp   nz, .hours                                          ; $04ad
+
+	bit PADB_DOWN, b
+    jp nz, .decreaseMinutes
+
+	bit PADB_UP, b
+	jp nz, .increaseMinutes
+
+	bit PADB_B, b
+	jp nz, .exit
+	jp z, .minutes
+.decreaseMinutes
+	dec a
+	cp a, $ff
+    jr nz, .updateDecM
+	ld a, 59
+.updateDecM
+	ld [$a000], a
+  ; in: a: value <100
+  ; out: a: units; b: tens
+    ld b, -1
+.separateTensDecM
+    inc b
+    sub 10
+    jr nc, .separateTensDecM
+    add a, 10
+    ld hl, $9b84
+	push af
+.waitVRAM3
+    ldh a, [rSTAT]
+    and STATF_BUSY
+    jr nz, .waitVRAM3
+	pop af
+    ld c, a
+    ld a, b
+    ldi [hl], a
+    ld a, c
+    ld [hl], a
+	ld a, $08
+	ld [$4000], a
+	xor a
+	ld [$a000], a
+    jr .minutes
+.increaseMinutes
+	inc a
+	cp a, 60
+    jr nz, .updateIncM
+	ld a, 0
+.updateIncM
+	ld [$a000], a
+  ; in: a: value <100
+  ; out: a: units; b: tens
+    ld b, -1
+.separateTensIncM
+    inc b
+    sub 10
+    jr nc, .separateTensIncM
+    add a, 10
+    ld hl, $9b84
+	push af
+.waitVRAM4
+	ldh a, [rSTAT]
+	and STATF_BUSY
+	jr nz, .waitVRAM4
+	pop af
+    ld c, a
+    ld a, b
+    ldi [hl], a
+    ld a, c
+    ld [hl], a
+	ld a, $08
+	ld [$4000], a
+	xor a
+	ld [$a000], a
+    jp .minutes
+.exit
+	; invert the palette back
+	ld a, %11100100
+	ld [rBGP], a
+	ld [rOBP0], a
+	; put the correct cursor tile
+	ld a, ">"
+	ld   [wOam+OAM_TILE_IDX], a 
     ret

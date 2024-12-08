@@ -7,7 +7,7 @@ BANK_0_FILES = \
 	code/menuScreens.s \
 	code/multiplayer.s \
 	code/shuttleRocket.s
-RAM_OBJS = build/wram.o build/hram.o
+RAM_OBJS = build/wram.o build/hram.o build/sram.o
 INCS = include/constants.s include/hardware.inc include/macros.s include/structs.s
 
 GFX_1BPP_OBJS = $(shell find gfx/1bpp/ -name '*.png' | sed "s/gfx\/1bpp/build/" | sed "s/.png/.1bpp/")
@@ -32,6 +32,9 @@ build/wram.o: include/wram.s
 	rgbasm -h -L -o $@ $<
 
 build/hram.o: include/hram.s
+	rgbasm -h -L -o $@ $<
+
+build/sram.o: include/sram.s
 	rgbasm -h -L -o $@ $<
 
 build/bank_000.o: code/bank_000.s $(GFX_1BPP_OBJS) $(GFX_2BPP_OBJS) $(INCS) $(BANK_0_FILES)

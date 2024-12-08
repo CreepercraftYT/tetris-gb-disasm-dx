@@ -230,7 +230,15 @@ CopyAsciiAndTitleScreenTileData:
 
 ; overruns into tile layout, actually $770 bytes
 	ld   bc, Gfx_TitleScreen.end-Gfx_TitleScreen+$0630              ; $27da
-	call CopyHLtoDE_BCbytes                                         ; $27dd
+	call CopyHLtoDE_BCbytes
+	push hl
+	push de
+	ld hl, ColonTile
+	ld de, $8fe0
+	ld bc, $10
+	call CopyHLtoDE_BCbytes
+	pop de 
+	pop hl                                         ; $27dd
 	ret                                                             ; $27e0
 
 
@@ -377,7 +385,7 @@ GameInnerScreen_TryAgain:
 	db "  ..... "
 
 
-PollInput:
+PollInput::
 	ld   a, $20                                                     ; $29a6
 	ldh  [rP1], a                                                   ; $29a8
 	ldh  a, [rP1]                                                   ; $29aa
@@ -694,7 +702,8 @@ CopyToShadowOamBasedOnSpriteSpec:
 
 ; get byte from last table
 ; exit big loop if ff
-	ld   a, [hl]                                                    ; $2add
+	ld   a, [hl]
+	call ConvertFromBgTileToObjectTile                                                    ; $2add
 	cp   $ff                                                        ; $2ade
 	jr   z, .showNextSpritesCheckIfMoreSpriteSpecs                  ; $2ae0
 
@@ -836,3 +845,31 @@ CopyToShadowOamBasedOnSpriteSpec:
 	pop  hl                                                         ; $2b60
 	jp   .bigLoop                                                   ; $2b61
 	
+ConvertFromBgTileToObjectTile:
+; we don't want to mess up stuff
+	cp a, $ff
+	ret z
+	cp a, $fe
+	ret z
+	ld b, a
+	ld a, [hGameState]
+	cp a, $0
+	ld a, b
+	ret nz
+    cp a, $87
+    jr nc, .pastGarbageBlock
+    add a, $75
+    ret
+.pastGarbageBlock
+    cp a, $89
+    jr nc, .pastGarbageBlock2
+	add a, $74
+    ret
+.pastGarbageBlock2
+    cp a, $8C
+    jr nc, .isHorIPieceEnd
+    sub a, $49    
+    ret
+.isHorIPieceEnd
+    sub a, $50 
+    ret

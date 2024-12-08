@@ -375,3 +375,7 @@ hPrevHiddenPiece:: ; $fffc
     db
 
     endu
+;hSelectedTimeSetting::
+;    db
+;hSelectedDateSetting::
+;    db
