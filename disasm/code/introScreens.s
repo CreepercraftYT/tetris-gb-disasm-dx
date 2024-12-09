@@ -8,7 +8,48 @@ GameState24_CopyrightDisplay:
 
 	call CopyAsciiAndTitleScreenTileData                            ; $036c
 	ld   de, Layout_Copyright                                       ; $036f
-	call CopyLayoutToScreen0                                        ; $0372
+	call CopyLayoutToScreen0   
+	ld a, 3
+	ld [rROMB0], a
+	ld hl, 0
+	ld a, [sIsDay_DuskDawn_Night]
+	cp a, 0
+	jr z, .noPalAdjA
+	ld hl, 128
+.adjLoopA
+	dec a
+	jr z, .noPalAdjA
+	add hl, hl
+	jr .adjLoopA
+.noPalAdjA
+	ld de, Palettes_TitleScreen
+	add hl, de
+	ld d, h
+	ld e, l
+	ld hl, rBCPS
+	ld b, $80
+	ld c, 64
+	call CopyPalettesToCram    
+	ld a, [sIsDay_DuskDawn_Night]
+	cp a, 0
+	jr z, .noPalAdjB   
+	ld hl, 128
+.adjLoopB
+	dec a
+	jr z, .noPalAdjB
+	add hl, hl
+	jr .adjLoopB
+.noPalAdjB
+	ld de, Palettes_TitleScreen
+	add hl, de
+	ld d, h
+	ld e, l
+	ld hl, rOCPS
+	ld b, $80
+	ld c, 64
+	call CopyPalettesToCram   
+	ld a, BANK_GRAPHICS_AND_LAYOUTS
+	ld [rROMB0], a                              ; $0372
 	call Clear_wOam                                                 ; $0375
 
 ; switch to demo pieces bank
@@ -145,7 +186,11 @@ GameState06_TitleScreenInit:
 .night 
 	ld   de, Layout_TitleScreen_Night    
 .copy                     ; $03ed
-	call CopyLayoutToScreen0          
+	call CopyLayoutToScreen0        
+	ld a, 3
+	ld [rROMB0], a  
+	ld   de, Attributes_TitleScreen
+	call CopyAttrToScreen0 
 	xor a
 	; set the bank back
 	inc a

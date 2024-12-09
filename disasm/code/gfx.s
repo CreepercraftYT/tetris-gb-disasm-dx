@@ -289,6 +289,61 @@ CopyLayoutBrowsToHL:
 
 	ret                                                             ; $2803
 
+	; in: DE - source addr
+CopyAttrToScreen0::
+	ld a, 1
+	ld [$ff4f], a
+	ld   hl, _SCRN0                                                 ; $27eb
+
+; in: DE - source addr
+; in: HL - vram dest addr
+CopyAttrToHL:
+	ld   b, SCREEN_TILE_HEIGHT                                      ; $27ee
+
+; in: B - number of rows to copy to
+; in: DE - source addr
+; in: HL - vram dest addr
+CopyAttrBrowsToHL:
+.loopRow:
+; push current start vram addr
+	push hl                                                         ; $27f0
+	ld   c, SCREEN_TILE_WIDTH                                       ; $27f1
+    inc de
+.loopCol:
+	ld   a, [de]                                                    ; $27f3
+	ld   [hl+], a                                                   ; $27f4      
+	inc  de     
+	inc de                                              ; $27f5
+	dec  c                                                          ; $27f6
+	jr   nz, .loopCol                                               ; $27f7
+
+; next row below start of current
+	pop  hl                                                         ; $27f9
+	push de                                                         ; $27fa
+	ld   de, GB_TILE_WIDTH                                          ; $27fb
+	add  hl, de                                                     ; $27fe
+	pop  de       
+	dec  de                                                  ; $27ff
+	dec  b                                                          ; $2800
+	jr   nz, .loopRow                                               ; $2801
+    xor a
+	ld [$ff4f], a
+	ret                                                             ; $2803
+
+CopyPalettesToCram::
+	; in: HL - Register addr
+    ; in: DE - Source
+	; in: B - Palette Address
+	; in: C - Bytes to copy
+	ld a, b
+	ldi [hl], a
+.loadPaletteLoop
+	ld a, [de]
+	ld [hl], a
+	inc de
+	dec c
+	jr nz, .loadPaletteLoop
+	ret
 
 CopyToGameScreenUntilByteReadEquFFhThenSetVramTransfer:
 .nextRow:

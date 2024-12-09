@@ -84,3 +84,11 @@ Layout_RocketScene_Night::
 GameScreenLayout_Dancers_Night::
 	INCBIN "data/gameScreenLayout_dancers_night.bin"
 .end
+
+SECTION "Palettes and Attribute Maps", ROMX, BANK[$3]
+Palettes_TitleScreen::
+	incbin "data/palettes_titleScreen.bin"
+
+Attributes_TitleScreen::
+	incbin "data/palmap_titleScreen.bin"
+.end

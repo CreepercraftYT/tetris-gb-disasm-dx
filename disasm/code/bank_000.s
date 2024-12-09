@@ -184,7 +184,7 @@ SECTION "Header", ROM0[$134]
 HeaderTitle::
 	db   "TETRISDX2", $00, $00, $00, $00, $00, $00
 HeaderCGBFlag::
-	db   CART_COMPATIBLE_GBC
+	db   CART_COMPATIBLE_DMG_GBC
 	
 	setcharmap new
 
