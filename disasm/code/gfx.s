@@ -909,8 +909,11 @@ ConvertFromBgTileToObjectTile:
 	ld b, a
 	ld a, [hGameState]
 	cp a, $0
+	jr z, .isInGame
+	cp a, $1A
 	ld a, b
 	ret nz
+.isInGame
     cp a, $87
     jr nc, .pastGarbageBlock
     add a, $75

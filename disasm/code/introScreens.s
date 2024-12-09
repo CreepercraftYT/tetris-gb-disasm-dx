@@ -30,6 +30,7 @@ GameState24_CopyrightDisplay:
 	ld b, $80
 	ld c, 64
 	call CopyPalettesToCram    
+	ld hl, 0
 	ld a, [sIsDay_DuskDawn_Night]
 	cp a, 0
 	jr z, .noPalAdjB   
@@ -565,6 +566,10 @@ GameState07_TitleScreenMain:
     push bc
 .updateClock::
 	ld hl, $9b81
+	xor a
+	ld [$6000], a
+	inc a
+	ld [$6000], a
 	ld a, $0A
 	ld [$4000], a
 	ld a, [$a000]
@@ -583,6 +588,10 @@ GameState07_TitleScreenMain:
 	ldi [hl], a
 	ld a, ":"
 	ldi [hl], a
+	xor a
+	ld [$6000], a
+	inc a
+	ld [$6000], a
 	ld a, $09
 	ld [$4000], a
 	ld a, [$a000]
@@ -700,6 +709,10 @@ GameState07_TitleScreenMain:
 	ld [$0000], a
 .hours
 ; Access Hour Register
+    xor a
+	ld [$6000], a
+	inc a
+	ld [$6000], a
 	ld a, $0a
 	ld [$4000], a
 	ld a, $68
@@ -782,9 +795,13 @@ GameState07_TitleScreenMain:
     ldi [hl], a
     ld a, c
     ld [hl], a
-    jr .hours
+    jp .hours
 .minutes
 	; Access Minute Register
+	xor a
+	ld [$6000], a
+	inc a
+	ld [$6000], a
 	ld a, $09
 	ld [$4000], a
 	ld a, $68

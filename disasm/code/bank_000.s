@@ -1933,9 +1933,17 @@ ConvertHexToDec::
 	ret
 
 UpdateClock::
+; don't do it on 2 Players Results screen
+    ld a, [hGameState]
+	cp a, $20
+	ret z
 	ld hl, $980f
 	ld e, 2
 .doHours
+	xor a
+	ld [$6000], a
+	inc a
+	ld [$6000], a
 	ld a, $0A
 	ld [$4000], a
 	ld a, [$a000]
@@ -1963,6 +1971,10 @@ UpdateClock::
 	ld a, [$a000]
     jr .updateSIsDay_DuskDawn_Night
 .doMinutes
+	xor a
+	ld [$6000], a
+	inc a
+	ld [$6000], a
 	ld a, $09
 	ld [$4000], a
 	ld a, [$a000]
