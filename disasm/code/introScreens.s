@@ -9,7 +9,7 @@ GameState24_CopyrightDisplay:
 	call CopyAsciiAndTitleScreenTileData                            ; $036c
 	ld   de, Layout_Copyright                                       ; $036f
 	call CopyLayoutToScreen0   
-	ld a, 3
+	ld a, BANK_DEMO_AND_NIGHT_GRAPHICS
 	ld [rROMB0], a
 	ld hl, 0
 	ld a, [sIsDay_DuskDawn_Night]
@@ -827,6 +827,9 @@ GameState07_TitleScreenMain:
 	jp nz, .increaseMinutes
 
 	bit PADB_B, b
+	jp nz, .exit
+
+	bit PADB_START, b
 	jp nz, .exit
 	jp z, .minutes
 .decreaseMinutes

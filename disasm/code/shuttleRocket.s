@@ -1,4 +1,6 @@
 GameState26_ShuttleSceneInit:
+    ld a, 1
+    ld [sIsRocketScene], a 
 ; display rocket scene (and its right metal structure) and left metal structure
     call DisplayRocketScene                                      ; $1167
     ld   hl, _SCRN1+$e6                                          ; $116a
@@ -315,6 +317,8 @@ GameState2c_ShuttleSceneShowCongratulations:
 
 
 GameState2d_CongratsWaitingBeforeBTypeScore:
+    xor a
+    ld [sIsRocketScene], a
 ; switch to bank 1 for graphics data	
 	ld a, BANK_GRAPHICS_AND_LAYOUTS
 	ld [rROMB0], a
@@ -348,6 +352,8 @@ GameState34_PreRocketSceneWait:
 
 
 GameState2e_RocketSceneInit:
+    ld a, 1
+    ld [sIsRocketScene], a
 ; load gfx and sprite specs (hidden gas for now)
     call DisplayRocketScene                                      ; $1324
     ld   de, SpriteSpecStruct_RocketAndGas                       ; $1327
@@ -513,6 +519,8 @@ GameState32_RocketSceneShootFire:
 
 
 GameState33_RocketSceneEnd:
+    xor a
+    ld [sIsRocketScene], a
 ; switch to bank 1 for graphics data	
 	ld a, BANK_GRAPHICS_AND_LAYOUTS
 	ld [rROMB0], a

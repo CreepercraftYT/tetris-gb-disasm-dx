@@ -89,6 +89,23 @@ SECTION "Palettes and Attribute Maps", ROMX, BANK[$3]
 Palettes_TitleScreen::
 	incbin "data/palettes_titleScreen.bin"
 
+Palettes_InGameGuideline::
+	incbin "data/palettes_inGameGuideline.bin"
+
+Palettes_InGameSega::
+	incbin "data/palettes_inGameSega.bin"
+
 Attributes_TitleScreen::
 	incbin "data/palmap_titleScreen.bin"
+
+Attributes_GameMusicTypeScreen::
+	incbin "data/palmap_gameMusicTypeScreen.bin"
+
+Attributes_ATypeSelectionScreen::
+	incbin "data/palmap_aTypeSelectionScreen.bin"
+
+Attributes_BTypeSelectionScreen::
+	incbin "data/palmap_bTypeSelectionScreen.bin"
 .end
+Layout_DMG::
+	incbin "data/layout_dmg.bin"

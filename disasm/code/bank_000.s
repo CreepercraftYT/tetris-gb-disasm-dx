@@ -215,7 +215,21 @@ HeaderMaskROMVersion::
 SECTION "Begin", ROM0[$150]
 
 Begin:
-	jp   Begin2                                                     ; $0150
+; check if running on GBC or DMG
+	cp a, 1
+	call z, IsDMG
+; Switch Speed
+    ldh a, [rKEY1]
+	and a, $80
+	jp nz,  Begin2
+	ld a, $30
+	ldh [rP1], a
+	ld a, 1
+	ldh [rKEY1], a
+	xor a
+	ldh [rIE], a
+	stop    
+	jp  Begin2                                                 ; $0150
 
 
 UnusedGetScreenTileInHLWhileOamFree:
@@ -1935,7 +1949,15 @@ ConvertHexToDec::
 UpdateClock::
 ; don't do it on 2 Players Results screen
     ld a, [hGameState]
+	cp a, $1F
+	ret z
 	cp a, $20
+	ret z
+	cp a, $21
+	ret z
+; or on rocket screens
+    ld a, [sIsRocketScene]
+	cp a, 1
 	ret z
 	ld hl, $980f
 	ld e, 2
@@ -1996,6 +2018,9 @@ UpdateClock::
 	ld a, 4
 	add a, h
 	ld h, a
+	ld a, -5
+	add a, l
+	ld l, a
 	jr .doHours 
 .setSramBank
 	ld a, 0
@@ -2035,6 +2060,19 @@ UpdateClock::
     jr .doMinutes
 ColonTile::
 	db $00, $00, $18, $18, $18, $18, $00, $00, $00, $00, $18, $18, $18, $18, $00, $00 
+
+IsDMG::
+	ld a, 1 
+	ld [rROMB0], a
+	call CopyAsciiAndTitleScreenTileData
+	ld a, 3
+	ld [rROMB0], a
+	ld de, Layout_DMG
+	call CopyLayoutToScreen0
+	ld a, %11100100
+	ld [rBGP], a 
+	jr IsDMG
+
 INCLUDE "code/gfx.s"
 
 INCLUDE "data/spriteData.s"

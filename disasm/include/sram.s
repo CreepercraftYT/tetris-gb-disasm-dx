@@ -10,3 +10,6 @@ sCurrYear::
 sIsDay_DuskDawn_Night::
     ds 1
 .end::
+sIsRocketScene::
+    ds 1
+.end

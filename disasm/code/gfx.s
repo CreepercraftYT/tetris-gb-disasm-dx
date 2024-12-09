@@ -81,11 +81,11 @@ StubInterruptHandler:
 
 
 SpriteSpecStruct_LPieceActive:
-	db $00, $18, $3f, SPRITE_SPEC_L_PIECE, $80, $00, $00, $ff
+	db $00, $18, $3f, SPRITE_SPEC_L_PIECE, $00, $00, $00, $ff
 
 
 SpriteSpecStruct_LPieceNext:
-	db $00, $80, $8f, SPRITE_SPEC_L_PIECE, $80, $00, $00, $ff
+	db $00, $80, $8f, SPRITE_SPEC_L_PIECE, $00, $00, $00, $ff
 
 
 SpriteSpecStruct_GameMusicAType:
@@ -202,7 +202,7 @@ LoadAsciiAndMenuScreenGfx:
 	ret                                                             ; $27c2
 
 
-CopyAsciiTileData:
+CopyAsciiTileData::
 	ld   hl, Gfx_Ascii                                              ; $27c3
 	ld   bc, Gfx_Ascii.end-Gfx_Ascii                                ; $27c6
 	ld   de, _VRAM                                                  ; $27c9
@@ -254,7 +254,7 @@ Stub_27ea:
 
 
 ; in: DE - source addr
-CopyLayoutToScreen0:
+CopyLayoutToScreen0::
 	ld   hl, _SCRN0                                                 ; $27eb
 
 ; in: DE - source addr
@@ -914,6 +914,7 @@ ConvertFromBgTileToObjectTile:
 	ld a, b
 	ret nz
 .isInGame
+	ld a, b
     cp a, $87
     jr nc, .pastGarbageBlock
     add a, $75

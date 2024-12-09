@@ -16,7 +16,13 @@ GameMusicTypeInitWithoutDisablingSerialRegs:
     call TurnOffLCD                                              ; $144f
     call LoadAsciiAndMenuScreenGfx                               ; $1452
     ld   de, Layout_GameMusicTypeScreen                          ; $1455
-    call CopyLayoutToScreen0                                     ; $1458
+    call CopyLayoutToScreen0 
+    ld a, BANK_DEMO_AND_NIGHT_GRAPHICS
+	ld [rROMB0], a
+    ld   de, Attributes_GameMusicTypeScreen
+    call CopyAttrToScreen0   
+    ld a, BANK_GRAPHICS_AND_LAYOUTS
+	ld [rROMB0], a                                 ; $1458
     call Clear_wOam                                              ; $145b
 
 ; initial sprites for selected game/music option
@@ -297,7 +303,13 @@ GameState10_ATypeSelectionInit:
 ; load gfx and data with lcd off, and clear oam
     call TurnOffLCD                                              ; $157b
     ld   de, Layout_ATypeSelectionScreen                         ; $157e
-    call CopyLayoutToScreen0                                     ; $1581
+    call CopyLayoutToScreen0 
+    ld a, BANK_DEMO_AND_NIGHT_GRAPHICS
+	ld [rROMB0], a
+    ld   de, Attributes_ATypeSelectionScreen
+    call CopyAttrToScreen0       
+    ld a, BANK_GRAPHICS_AND_LAYOUTS
+	ld [rROMB0], a                              ; $1581
     call DisplayDottedLinesForHighScore                          ; $1584
     call Clear_wOam                                              ; $1587
 
@@ -441,7 +453,13 @@ GameState12_BTypeSelectionInit:
 ; load gfx, layout and clear oam while lcd off
     call TurnOffLCD                                              ; $1629
     ld   de, Layout_BTypeSelectionScreen                         ; $162c
-    call CopyLayoutToScreen0                                     ; $162f
+    call CopyLayoutToScreen0  
+    ld a, BANK_DEMO_AND_NIGHT_GRAPHICS
+	ld [rROMB0], a
+    ld   de, Attributes_BTypeSelectionScreen
+    call CopyAttrToScreen0 
+    ld a, BANK_GRAPHICS_AND_LAYOUTS
+	ld [rROMB0], a                                   ; $162f
     call Clear_wOam                                              ; $1632
 
 ; get sprite specs for both level and high options
