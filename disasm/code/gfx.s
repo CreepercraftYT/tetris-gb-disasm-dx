@@ -933,3 +933,25 @@ ConvertFromBgTileToObjectTile:
 .isHorIPieceEnd
     sub a, $50 
     ret
+InvertPalettes::
+	ld      BC,(64)<<8|LOW(rBCPS)
+	ld      A,$80
+	ldh     [$FF00+C],A
+	inc     C
+:	call WaitVRAM
+    ldh     A,[$FF00+C]
+	cpl
+	ldh     [$FF00+C],A
+	dec     B
+	jr      nz,:-
+	ld      BC,(64)<<8|LOW(rOCPS)
+	ld      A,$80
+	ldh     [$FF00+C],A
+	inc     C
+:	call WaitVRAM
+    ldh     A,[$FF00+C]
+	cpl
+	ldh     [$FF00+C],A
+	dec     B
+	jr      nz,:-
+	ret

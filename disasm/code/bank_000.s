@@ -909,7 +909,9 @@ GameState0a_InGameInit:
 
 ; clear ram buffer
 	ld   a, TILE_FLASHING_PIECE+1                                             ; $1a18
-	call FillGameScreenBufferWithTileAandSetToVramTransfer          ; $1a1a
+	call FillGameScreenBufferWithTileAandSetToVramTransfer
+	ld a, 3       
+	call FillGameScreenBuffer2WithPaletteAandSetToVramTransfer ; $1a1a
 	call FillBottom2RowsOfTileMapWithEmptyTile                      ; $1a1d
 
 ; clear scores, row shifting var and oam
@@ -953,6 +955,11 @@ GameState0a_InGameInit:
 	ld a, [sIsDay_DuskDawn_Night]
 	cp a, 0
 	jr z, .noPalAdjA
+	ld c, a
+	ld a, [sOptionDayNightCycle]
+	cp a, 1
+	ld a, c
+	jr z, .noPalAdjA
 	ld hl, 128
 .adjLoopA
 	dec a
@@ -960,7 +967,14 @@ GameState0a_InGameInit:
 	add hl, hl
 	jr .adjLoopA
 .noPalAdjA
+    ld a, [sOptionColors]
+	cp a, 1
+	jr z, .segaColors
 	ld de, Palettes_InGameGuideline
+	jr .loadPalettes
+.segaColors
+	ld de, Palettes_InGameSega
+.loadPalettes
 	add hl, de
 	ld d, h
 	ld e, l
@@ -972,6 +986,11 @@ GameState0a_InGameInit:
 	ld a, [sIsDay_DuskDawn_Night]
 	cp a, 0
 	jr z, .noPalAdjB   
+	ld c, a
+	ld a, [sOptionDayNightCycle]
+	cp a, 1
+	ld a, c
+	jr z, .noPalAdjB
 	ld hl, 128
 .adjLoopB
 	dec a
@@ -979,7 +998,14 @@ GameState0a_InGameInit:
 	add hl, hl
 	jr .adjLoopB
 .noPalAdjB
+	ld a, [sOptionColors]
+	cp a, 1
+	jr z, .segaColorsObj
 	ld de, Palettes_InGameGuideline+64
+	jr .loadObjPalettes
+.segaColorsObj
+	ld de, Palettes_InGameSega+64
+.loadObjPalettes
 	add hl, de
 	ld d, h
 	ld e, l
@@ -1577,7 +1603,9 @@ GameState01_GameOverInit:
 
 ; start to clear screen with a solid block, set timer, then next state
 	ld   a, TILE_SOLID_BLOCK                                        ; $1cf8
-	call FillGameScreenBufferWithTileAandSetToVramTransfer          ; $1cfa
+	call FillGameScreenBufferWithTileAandSetToVramTransfer
+	ld a, 5
+	call FillGameScreenBuffer2WithPaletteAandSetToVramTransfer          ; $1cfa
 
 	ld   a, $46                                                     ; $1cfd
 	ldh  [hTimer1], a                                               ; $1cff
@@ -1821,7 +1849,33 @@ FillGameScreenBufferWithTileA:
 	jr   nz, .nextRow                                               ; $1fef
 
 	ret                                                             ; $1ff1
-
+FillGameScreenBuffer2WithPaletteAandSetToVramTransfer:
+	; start to fill rows going down with tile A
+	push af                                                         ; $1fd7
+	ld   a, ROWS_SHIFTING_DOWN_ROW_START                            ; $1fd8
+	ldh  [hRowsShiftingDownState], a                                ; $1fda
+	pop  af                                                         ; $1fdc
+	
+FillGameScreenBuffer2WithPaletteA:
+	ld   hl, sGameScreenBufferAttr+2                                    ; $1fdd
+	ld   c, GAME_SCREEN_ROWS                                        ; $1fe0
+	ld   de, GB_TILE_WIDTH                                          ; $1fe2
+	
+.nextRow:
+	push hl                                                         ; $1fe5
+	ld   b, GAME_SQUARE_WIDTH                                       ; $1fe6
+	
+.nextCol:
+	ld   [hl+], a                                                   ; $1fe8
+	dec  b                                                          ; $1fe9
+	jr   nz, .nextCol                                               ; $1fea
+	
+	pop  hl                                                         ; $1fec
+	add  hl, de                                                     ; $1fed
+	dec  c                                                          ; $1fee
+	jr   nz, .nextRow                                               ; $1fef
+	
+	ret    
 
 ; useless?
 FillBottom2RowsOfTileMapWithEmptyTile:
@@ -2039,12 +2093,7 @@ UpdateClock::
 	add a, 10
 	ld c, a
 	ld a, b
-	push af
-.waitVRAMC
-    ldh a, [rSTAT]
-    and STATF_BUSY
-    jr nz, .waitVRAMC
-	pop af
+	call WaitVRAM
 	ldi [hl], a
 	ld a, c
 	ldi [hl], a
@@ -2070,6 +2119,7 @@ UpdateClock::
 	add a, 10
 	ld c, a
 	ld a, b
+	call WaitVRAM
 	ldi [hl], a
 	ld a, c
 	ldi [hl], a
@@ -2132,7 +2182,14 @@ IsDMG::
 	ld a, %11100100
 	ld [rBGP], a 
 	jr IsDMG
-
+WaitVRAM::
+	push af
+.loop
+    ldh a, [rSTAT]
+    and STATF_BUSY
+    jr nz, .loop
+	pop af
+	ret
 INCLUDE "code/gfx.s"
 
 INCLUDE "data/spriteData.s"

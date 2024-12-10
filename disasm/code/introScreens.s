@@ -15,6 +15,11 @@ GameState24_CopyrightDisplay:
 	ld a, [sIsDay_DuskDawn_Night]
 	cp a, 0
 	jr z, .noPalAdjA
+	ld c, a
+	ld a, [sOptionDayNightCycle]
+	cp a, 1
+	ld a, c
+	jr z, .noPalAdjA
 	ld hl, 128
 .adjLoopA
 	dec a
@@ -33,7 +38,12 @@ GameState24_CopyrightDisplay:
 	ld hl, 0
 	ld a, [sIsDay_DuskDawn_Night]
 	cp a, 0
-	jr z, .noPalAdjB   
+	jr z, .noPalAdjB  
+	ld c, a
+	ld a, [sOptionDayNightCycle]
+	cp a, 1
+	ld a, c
+	jr z, .noPalAdjB 
 	ld hl, 128
 .adjLoopB
 	dec a
@@ -188,10 +198,60 @@ GameState06_TitleScreenInit:
 	ld   de, Layout_TitleScreen_Night    
 .copy                     ; $03ed
 	call CopyLayoutToScreen0        
-	ld a, 3
+	ld a, BANK_DEMO_AND_NIGHT_GRAPHICS
 	ld [rROMB0], a  
 	ld   de, Attributes_TitleScreen
-	call CopyAttrToScreen0 
+	call CopyAttrToScreen0
+	ld hl, 0
+	ld a, [sIsDay_DuskDawn_Night]
+	cp a, 0
+	jr z, .noPalAdjA
+	ld c, a
+	ld a, [sOptionDayNightCycle]
+	cp a, 1
+	ld a, c
+	jr z, .noPalAdjA
+	ld hl, 128
+.adjLoopA
+	dec a
+	jr z, .noPalAdjA
+	add hl, hl
+	jr .adjLoopA
+.noPalAdjA
+	ld de, Palettes_TitleScreen
+	add hl, de
+	ld d, h
+	ld e, l
+	ld hl, rBCPS
+	ld b, $80
+	ld c, 64
+	call CopyPalettesToCram    
+	ld hl, 0
+	ld a, [sIsDay_DuskDawn_Night]
+	cp a, 0
+	jr z, .noPalAdjB  
+	ld c, a
+	ld a, [sOptionDayNightCycle]
+	cp a, 1
+	ld a, c
+	jr z, .noPalAdjB 
+	ld hl, 128
+.adjLoopB
+	dec a
+	jr z, .noPalAdjB
+	add hl, hl
+	jr .adjLoopB
+.noPalAdjB
+	ld de, Palettes_TitleScreen
+	add hl, de
+	ld d, h
+	ld e, l
+	ld hl, rOCPS
+	ld b, $80
+	ld c, 64
+	call CopyPalettesToCram   
+	ld a, BANK_GRAPHICS_AND_LAYOUTS
+	ld [rROMB0], a  
 	xor a
 	; set the bank back
 	inc a
@@ -608,7 +668,32 @@ GameState07_TitleScreenMain:
 	ldi [hl], a
 	ld a, c
 	ldi [hl], a
-    pop bc
+	ld a, $0
+	ld [$4000], a
+
+.updateToggledOptions
+	xor a, a
+	ld c, 3
+.updateLoop
+	push af
+	push bc
+	; get the state of the option
+	ld h, HIGH(sOptionLights)
+	ld b, LOW(sOptionLights)
+	ld d, a
+	add a, b
+	ld l, a
+    ld a, [hl]
+	ld e, a
+    ld a, d
+	; update the toggle tile
+	call ChangeToggleTile
+	pop bc
+	pop af
+	inc a
+    dec c
+	jr nz, .updateLoop
+	pop bc
 	bit PADB_A, b
 	ret z
 .pressedDownOptions
@@ -668,42 +753,14 @@ GameState07_TitleScreenMain:
 	inc a
 	and a, 1
 	ld [hl], a
-; change the toggle tile
 	ld e, a
 	ld hl, hSelectedOption
 	ld a, [hl]
-; get the VRAM address
-	ld h, HIGH(OPTION_LIGHTS)
-	ld b, LOW(OPTION_LIGHTS)
-	ld c, $40
-	inc a
-	ld d, a
-	ld a, b
-:   dec d
-    jr z, :+
-    add a, c
-	jr :-
-:   ld l, a
-; get the toggle back in A
-    ld a, e
-	ld b, "*"
-; get the correct tile
-	add a, b
-; load it
-    push af
-.waitVRAMA
-    ldh a, [rSTAT]
-    and STATF_BUSY
-    jr nz, .waitVRAMA
-	pop af
-    ld [hl], a
-
+    call ChangeToggleTile
     ret
 .setTime
 ; invert the palette
-	ld a, %00011011
-	ld [rBGP], a
-	ld [rOBP0], a
+	call InvertPalettes
 ; Open SRAM
 	ld a, $0A
 	ld [$0000], a
@@ -747,21 +804,9 @@ GameState07_TitleScreenMain:
 	ld a, 23
 .updateDecH
 	ld [$a000], a
-  ; in: a: value <100
-  ; out: a: units; b: tens
-    ld b, -1
-.separateTensDecH
-    inc b
-    sub 10
-    jr nc, .separateTensDecH
-    add a, 10
+	call SeparateTens
     ld hl, $9b81
-	push af
-.waitVRAM1
-    ldh a, [rSTAT]
-    and STATF_BUSY
-    jr nz, .waitVRAM1
-	pop af
+	call WaitVRAM
     ld c, a
     ld a, b
     ldi [hl], a
@@ -775,21 +820,9 @@ GameState07_TitleScreenMain:
 	ld a, 0
 .updateIncH
 	ld [$a000], a
-  ; in: a: value <100
-  ; out: a: units; b: tens
-    ld b, -1
-.separateTensIncH
-    inc b
-    sub 10
-    jr nc, .separateTensIncH
-    add a, 10
+	call SeparateTens
     ld hl, $9b81
-	push af
-.waitVRAM2
-    ldh a, [rSTAT]
-    and STATF_BUSY
-    jr nz, .waitVRAM2
-	pop af
+	call WaitVRAM
     ld c, a
     ld a, b
     ldi [hl], a
@@ -839,21 +872,9 @@ GameState07_TitleScreenMain:
 	ld a, 59
 .updateDecM
 	ld [$a000], a
-  ; in: a: value <100
-  ; out: a: units; b: tens
-    ld b, -1
-.separateTensDecM
-    inc b
-    sub 10
-    jr nc, .separateTensDecM
-    add a, 10
+    call SeparateTens
     ld hl, $9b84
-	push af
-.waitVRAM3
-    ldh a, [rSTAT]
-    and STATF_BUSY
-    jr nz, .waitVRAM3
-	pop af
+	call WaitVRAM
     ld c, a
     ld a, b
     ldi [hl], a
@@ -871,21 +892,8 @@ GameState07_TitleScreenMain:
 	ld a, 0
 .updateIncM
 	ld [$a000], a
-  ; in: a: value <100
-  ; out: a: units; b: tens
-    ld b, -1
-.separateTensIncM
-    inc b
-    sub 10
-    jr nc, .separateTensIncM
-    add a, 10
     ld hl, $9b84
-	push af
-.waitVRAM4
-	ldh a, [rSTAT]
-	and STATF_BUSY
-	jr nz, .waitVRAM4
-	pop af
+	call WaitVRAM
     ld c, a
     ld a, b
     ldi [hl], a
@@ -898,10 +906,41 @@ GameState07_TitleScreenMain:
     jp .minutes
 .exit
 	; invert the palette back
-	ld a, %11100100
-	ld [rBGP], a
-	ld [rOBP0], a
+	call InvertPalettes
 	; put the correct cursor tile
 	ld a, ">"
 	ld   [wOam+OAM_TILE_IDX], a 
+    ret
+SeparateTens::
+; in: a: value <100
+; out: a: units; b: tens
+    ld b, -1
+.loop
+	  inc b
+	  sub 10
+	  jr nc, .loop
+	  add a, 10
+	  ret
+
+ChangeToggleTile::
+; get the VRAM address
+	ld h, HIGH(OPTION_LIGHTS)
+	ld b, LOW(OPTION_LIGHTS)
+	ld c, $40
+	inc a
+	ld d, a
+	ld a, b
+:   dec d
+    jr z, :+
+    add a, c
+	jr :-
+:   ld l, a
+; get the toggle back in A
+    ld a, e
+	ld b, "*"
+; get the correct tile
+	add a, b
+; load it
+    call WaitVRAM
+    ld [hl], a
     ret

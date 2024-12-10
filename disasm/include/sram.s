@@ -1,6 +1,10 @@
 INCLUDE "includes.s"
 
 SECTION "SRAM", SRAM[$A000]
+sGameScreenBufferAttr:: 
+    ds $400
+.end::
+
 sCurrMonth::
     ds 1
 sCurrYear::
@@ -23,10 +27,6 @@ sOptionDayNightCycle::
     ds 1
 .end::
 
-sGameScreenBufferAttr:: ; $c800
-    ds $400
-.end::
-
 sBTypeHighScores:: ; $d000
     ds HISCORE_SIZEOF * 10 * 6
 
@@ -34,6 +34,12 @@ sATypeHighScores:: ; $d654
     ds HISCORE_SIZEOF * 10
 .end:: 
 
-sIsSRAMInitialized::
-   ds 1
+
+
+sSramBufferAddressesForCompletedRows:: ; 
+    ds 9 ; big-endian
 .end::
+
+sIsSRAMInitialized::
+    ds 1
+ .end::
