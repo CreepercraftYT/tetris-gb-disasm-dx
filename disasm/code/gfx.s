@@ -878,7 +878,8 @@ CopyToShadowOamBasedOnSpriteSpec:
 	ld   [hl+], a                                                   ; $2b4b
 
 ; store tile Index
-	ldh  a, [hCurrSpriteTileIndex]                                  ; $2b4c
+	ldh  a, [hCurrSpriteTileIndex]    
+;	call ConvertFromBgTileToObjectTile                              ; $2b4c
 	ld   [hl+], a                                                   ; $2b4e
 
 ; todo: attr made from $94|$8b|$8a

@@ -70,12 +70,6 @@ wcc00:
 wStackTop:: ; $cfff
     db ; just to fill this ram space
 
-wBTypeHighScores:: ; $d000
-    ds HISCORE_SIZEOF * 10 * 6
-
-wATypeHighScores:: ; $d654
-    ds HISCORE_SIZEOF * 10
-
 wd762:
     ds $f70-$762
 
@@ -207,11 +201,3 @@ wNoiseEffectFrameCounterThreshold:: ; dffb
 wNoiseEffectMiscCounter:: ; $dffc
     db
 
-; option toggles
-wOptionLights::
-    ds 1
-wOptionColors::
-    ds 1 
-wOptionDayNightCycle::
-    ds 1
-.end::

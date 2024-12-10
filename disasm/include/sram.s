@@ -13,3 +13,27 @@ sIsDay_DuskDawn_Night::
 sIsRocketScene::
     ds 1
 .end
+
+; option toggles
+sOptionLights::
+    ds 1
+sOptionColors::
+    ds 1 
+sOptionDayNightCycle::
+    ds 1
+.end::
+
+sGameScreenBufferAttr:: ; $c800
+    ds $400
+.end::
+
+sBTypeHighScores:: ; $d000
+    ds HISCORE_SIZEOF * 10 * 6
+
+sATypeHighScores:: ; $d654
+    ds HISCORE_SIZEOF * 10
+.end:: 
+
+sIsSRAMInitialized::
+   ds 1
+.end::

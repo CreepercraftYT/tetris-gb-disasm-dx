@@ -660,8 +660,8 @@ GameState07_TitleScreenMain:
 	ld a, [hl]
 	cp a, 3
     jr z, .setTime
-	ld h, HIGH(wOptionLights)
-	ld b, LOW(wOptionLights)
+	ld h, HIGH(sOptionLights)
+	ld b, LOW(sOptionLights)
 	add a, b
 	ld l, a
     ld a, [hl]

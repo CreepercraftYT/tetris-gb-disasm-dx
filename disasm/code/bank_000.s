@@ -450,13 +450,30 @@ Reset:
 ; set rom bank for some reason, and set SP
 	ld   a, $01                                                     ; $0252
 	ld   [rROMB0], a                                                ; $0254
-	ld   sp, wStackTop                                              ; $0257
-
+	ld   sp, wStackTop  
+	                                            ; $0257
+.initializeSram
+; Open Sram
+	ld a, $0a
+	ld [$0000], a
+; Check if it was already initialized
+	ld a, [sIsSRAMInitialized]
+	cp a, 1
+    jr z, .sramInitialized
+	ld hl, $A000
+.clearSram
+	xor a
+	ldi [hl], a
+    ld a, h
+ 	cp a, $C0
+	jr nz, .clearSram
+	ld a, 1
+	ld [sIsSRAMInitialized], a
 ; clear last page of wram
+.sramInitialized
 	xor  a                                                          ; $025a
 	ld   hl, $dfff                                                  ; $025b
 	ld   b, $00                                                     ; $025e
-
 .clearLastPage:
 	ld   [hl-], a                                                   ; $0260
 	dec  b                                                          ; $0261
@@ -891,7 +908,7 @@ GameState0a_InGameInit:
 	ldh  [hNumLinesCompletedBCD+1], a                               ; $1a16
 
 ; clear ram buffer
-	ld   a, TILE_EMPTY                                              ; $1a18
+	ld   a, TILE_FLASHING_PIECE+1                                             ; $1a18
 	call FillGameScreenBufferWithTileAandSetToVramTransfer          ; $1a1a
 	call FillBottom2RowsOfTileMapWithEmptyTile                      ; $1a1d
 
@@ -930,6 +947,48 @@ GameState0a_InGameInit:
 	pop  de                                                         ; $1a48
 	ld   hl, _SCRN1                                                 ; $1a49
 	call CopyLayoutToHL                                             ; $1a4c
+	ld a, BANK_DEMO_AND_NIGHT_GRAPHICS
+	ld [rROMB0], a
+	ld hl, 0
+	ld a, [sIsDay_DuskDawn_Night]
+	cp a, 0
+	jr z, .noPalAdjA
+	ld hl, 128
+.adjLoopA
+	dec a
+	jr z, .noPalAdjA
+	add hl, hl
+	jr .adjLoopA
+.noPalAdjA
+	ld de, Palettes_InGameGuideline
+	add hl, de
+	ld d, h
+	ld e, l
+	ld hl, rBCPS
+	ld b, $80
+	ld c, 64
+	call CopyPalettesToCram    
+	ld hl, 0
+	ld a, [sIsDay_DuskDawn_Night]
+	cp a, 0
+	jr z, .noPalAdjB   
+	ld hl, 128
+.adjLoopB
+	dec a
+	jr z, .noPalAdjB
+	add hl, hl
+	jr .adjLoopB
+.noPalAdjB
+	ld de, Palettes_InGameGuideline+64
+	add hl, de
+	ld d, h
+	ld e, l
+	ld hl, rOCPS
+	ld b, $80
+	ld c, 64
+	call CopyPalettesToCram   
+	ld a, BANK_GRAPHICS_AND_LAYOUTS
+	ld [rROMB0], a       
 
 ; screen 1 is for pause text
 	ld   de, GameInnerScreenLayout_Pause                            ; $1a4f
@@ -1172,11 +1231,11 @@ PopulateGameScreenWithRandomBlocks:
 	jr   nz, .fromWasTileEmpty                                      ; $1b79
 
 ; 1st, 3rd run etc - start with empty tile
-	ld   a, TILE_EMPTY                                              ; $1b7b
+	ld   a, TILE_FLASHING_PIECE+1                                              ; $1b7b
 	jr   .toDecRandom                                               ; $1b7d
 
 .afterChoosingEmptyOrPieceSquare:
-	cp   TILE_EMPTY                                                 ; $1b7f
+	cp   TILE_FLASHING_PIECE+1                                                 ; $1b7f
 	jr   z, .pickedEmpty                                            ; $1b81
 
 ; if not empty, actually choose one of the 8 tiles from it
@@ -1200,12 +1259,12 @@ PopulateGameScreenWithRandomBlocks:
 
 ; at column $0b, use chosen square if previous chosen was empty
 	ldh  a, [hRandomSquareObstacleTileChosen]                       ; $1b95
-	cp   TILE_EMPTY                                                 ; $1b97
+	cp   TILE_FLASHING_PIECE+1                                                 ; $1b97
 	jr   z, .popAFstoreChosenSquare                                 ; $1b99
 
 ; override square chosen with empty otherwise, so there is 1+ empty tiles per row
 	pop  af                                                         ; $1b9b
-	ld   a, TILE_EMPTY                                              ; $1b9c
+	ld   a, TILE_FLASHING_PIECE+1                                              ; $1b9c
 	jr   .storeChosenSquare                                         ; $1b9e
 
 .popAFstoreChosenSquare:

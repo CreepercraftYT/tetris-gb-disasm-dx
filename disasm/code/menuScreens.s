@@ -307,7 +307,45 @@ GameState10_ATypeSelectionInit:
     ld a, BANK_DEMO_AND_NIGHT_GRAPHICS
 	ld [rROMB0], a
     ld   de, Attributes_ATypeSelectionScreen
-    call CopyAttrToScreen0       
+    call CopyAttrToScreen0  
+	ld hl, 0
+	ld a, [sIsDay_DuskDawn_Night]
+	cp a, 0
+	jr z, .noPalAdjA
+	ld hl, 128
+.adjLoopA
+	dec a
+	jr z, .noPalAdjA
+	add hl, hl
+	jr .adjLoopA
+.noPalAdjA
+	ld de, Palettes_TitleScreen
+	add hl, de
+	ld d, h
+	ld e, l
+	ld hl, rBCPS
+	ld b, $80
+	ld c, 64
+	call CopyPalettesToCram    
+	ld hl, 0
+	ld a, [sIsDay_DuskDawn_Night]
+	cp a, 0
+	jr z, .noPalAdjB   
+	ld hl, 128
+.adjLoopB
+	dec a
+	jr z, .noPalAdjB
+	add hl, hl
+	jr .adjLoopB
+.noPalAdjB
+	ld de, Palettes_TitleScreen
+	add hl, de
+	ld d, h
+	ld e, l
+	ld hl, rOCPS
+	ld b, $80
+	ld c, 64
+	call CopyPalettesToCram             
     ld a, BANK_GRAPHICS_AND_LAYOUTS
 	ld [rROMB0], a                              ; $1581
     call DisplayDottedLinesForHighScore                          ; $1584
@@ -458,6 +496,44 @@ GameState12_BTypeSelectionInit:
 	ld [rROMB0], a
     ld   de, Attributes_BTypeSelectionScreen
     call CopyAttrToScreen0 
+    ld hl, 0
+	ld a, [sIsDay_DuskDawn_Night]
+	cp a, 0
+	jr z, .noPalAdjA
+	ld hl, 128
+.adjLoopA
+	dec a
+	jr z, .noPalAdjA
+	add hl, hl
+	jr .adjLoopA
+.noPalAdjA
+	ld de, Palettes_TitleScreen
+	add hl, de
+	ld d, h
+	ld e, l
+	ld hl, rBCPS
+	ld b, $80
+	ld c, 64
+	call CopyPalettesToCram    
+	ld hl, 0
+	ld a, [sIsDay_DuskDawn_Night]
+	cp a, 0
+	jr z, .noPalAdjB   
+	ld hl, 128
+.adjLoopB
+	dec a
+	jr z, .noPalAdjB
+	add hl, hl
+	jr .adjLoopB
+.noPalAdjB
+	ld de, Palettes_TitleScreen
+	add hl, de
+	ld d, h
+	ld e, l
+	ld hl, rOCPS
+	ld b, $80
+	ld c, 64
+	call CopyPalettesToCram      
     ld a, BANK_GRAPHICS_AND_LAYOUTS
 	ld [rROMB0], a                                   ; $162f
     call Clear_wOam                                              ; $1632
@@ -794,7 +870,7 @@ DisplayATypeHighScoresForLevel:
 
 ; loop until we get the high score address for the current level
     ldh  a, [hATypeLevel]                                        ; $1798
-    ld   hl, wATypeHighScores                                    ; $179a
+    ld   hl, sATypeHighScores                                    ; $179a
     ld   de, HISCORE_SIZEOF                                      ; $179d
 
 .decA:
@@ -818,7 +894,7 @@ DisplayATypeHighScoresForLevel:
 DisplayBTypeHighScoresForLevel:
     call DisplayDottedLinesForHighScore                          ; $17af
     ldh  a, [hBTypeLevel]                                        ; $17b2
-    ld   hl, wBTypeHighScores                                    ; $17b4
+    ld   hl, sBTypeHighScores                                    ; $17b4
     ld   de, HISCORE_SIZEOF * 6                                  ; $17b7
 
 ; loop until we get the high score address for the current level

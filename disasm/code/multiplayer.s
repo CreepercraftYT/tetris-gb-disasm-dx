@@ -193,7 +193,7 @@ GameState16_MarioLuigiScreenInit:
 
 ; clear oam and fill game screen with empty tiles
     call Clear_wOam                                              ; $06a2
-    ld   a, TILE_EMPTY                                           ; $06a5
+    ld   a, TILE_FLASHING_PIECE+1                                           ; $06a5
     call FillGameScreenBufferWithTileA                           ; $06a7
 
 ; have master transfer in vblank, then clear some vars
@@ -535,7 +535,48 @@ GameState18_2PlayerInGameInit:
     pop  de                                                      ; $085e
     ld   hl, _SCRN1                                              ; $085f
     call CopyLayoutToHL                                          ; $0862
-
+	ld a, BANK_DEMO_AND_NIGHT_GRAPHICS
+	ld [rROMB0], a
+	ld hl, 0
+	ld a, [sIsDay_DuskDawn_Night]
+	cp a, 0
+	jr z, .noPalAdjA
+	ld hl, 128
+.adjLoopA
+	dec a
+	jr z, .noPalAdjA
+	add hl, hl
+	jr .adjLoopA
+.noPalAdjA
+	ld de, Palettes_InGameGuideline
+	add hl, de
+	ld d, h
+	ld e, l
+	ld hl, rBCPS
+	ld b, $80
+	ld c, 64
+	call CopyPalettesToCram    
+	ld hl, 0
+	ld a, [sIsDay_DuskDawn_Night]
+	cp a, 0
+	jr z, .noPalAdjB   
+	ld hl, 128
+.adjLoopB
+	dec a
+	jr z, .noPalAdjB
+	add hl, hl
+	jr .adjLoopB
+.noPalAdjB
+	ld de, Palettes_InGameGuideline+64
+	add hl, de
+	ld d, h
+	ld e, l
+	ld hl, rOCPS
+	ld b, $80
+	ld c, 64
+	call CopyPalettesToCram   
+	ld a, BANK_GRAPHICS_AND_LAYOUTS
+	ld [rROMB0], a  
 ; copy pause screen layout to screen 1
     ld   de, GameInnerScreenLayout_Pause                         ; $0865
     ld   hl, _SCRN1+$63                                          ; $0868
@@ -746,7 +787,7 @@ GameState19_2PlayerSyncHighBlocksAndPieces:
     cp   HIGH(wGameScreenBuffer)                                 ; $0967
     jr   z, .waitUntilPassivePresent                             ; $0969
 
-    ld   a, TILE_EMPTY                                           ; $096b
+    ld   a, TILE_FLASHING_PIECE+1                                           ; $096b
 
 .setEmpty:
     ld   [hl+], a                                                ; $096d
@@ -1156,7 +1197,7 @@ GameState1c_2PlayerSyncAtInGameInitEnd:
     jr   .loopUntilBequ0                                         ; $0b28
 
 .done:
-    ld   [hl], TILE_EMPTY                                        ; $0b2a
+    ld   [hl], TILE_FLASHING_PIECE+1                                        ; $0b2a
 
 ; transfer in vblank
     ld   a, $03                                                  ; $0b2c
@@ -1254,7 +1295,7 @@ CheckAlmostLosingStatus:
 ; loop through entire game screen buffer, looking for non-empty tiles
     ld   de, GB_TILE_WIDTH                                       ; $0b9b
     ld   hl, wGameScreenBuffer+2                                 ; $0b9e
-    ld   a, TILE_EMPTY                                           ; $0ba1
+    ld   a, TILE_FLASHING_PIECE+1                                          ; $0ba1
     ld   c, GAME_SCREEN_ROWS                                     ; $0ba3
 
 .nextRow:

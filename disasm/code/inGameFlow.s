@@ -14,7 +14,20 @@ PlayNextPieceLoadNextAndHiddenPiece:
 ; Spec Idx from sprite spec 2 spec idx
     inc  l                                                       ; $2012
     ld   a, [wSpriteSpecs+SPR_SPEC_SIZEOF+SPR_SPEC_SpecIdx]      ; $2013
-    ld   [hl], a                                                 ; $2016
+    ld   [hl], a      
+    push af        
+    push hl                                   ; $2016
+    sra a
+    sra a
+    ld hl, PieceColorLookUpTable
+    add a, l
+    ld l, a
+    ld a, [hl]
+; Color
+    pop hl
+    inc l
+    ld [hl], a
+    pop af
 
 ; store piece type in C
     and  $fc                                                     ; $2017
@@ -108,8 +121,18 @@ PlayNextPieceLoadNextAndHiddenPiece:
     ldh  [hHiddenLoadedPiece], a                                 ; $2063
 
 .skipDIV:
-    ld   a, e                                                    ; $2065
-    ld   [wSpriteSpecs+SPR_SPEC_SIZEOF+SPR_SPEC_SpecIdx], a      ; $2066
+    ld   a, e   
+    ld   [wSpriteSpecs+SPR_SPEC_SIZEOF+SPR_SPEC_SpecIdx], a    
+    push af                                           ; $2016
+    sra a
+    sra a
+    ld hl, PieceColorLookUpTable
+    add a, l
+    ld l, a
+    ld a, [hl]
+; Color
+    ld   [wSpriteSpecs+SPR_SPEC_SIZEOF+SPR_SPEC_SpecIdx+1], a
+    pop af                                             ; $2065      ; $2066
     call Copy2ndSpriteSpecToSprite8                              ; $2069
 
 ; update frames to move down for piece
@@ -334,7 +357,7 @@ InGameCheckIfAnyTetrisRowsComplete:
 
 .nextCol:
     ld   a, [hl+]                                                ; $2156
-    cp   TILE_EMPTY                                              ; $2157
+    cp   TILE_FLASHING_PIECE+1                                             ; $2157
     jp   z, .emptyTileFoundInRow                                 ; $2159
 
     dec  c                                                       ; $215c
@@ -500,7 +523,7 @@ FlashCompletedTetrisRows:
     ld   a, TILE_FLASHING_PIECE                                  ; $2200
     jr   nz, .flashRow                                           ; $2202
 
-    ld   a, TILE_EMPTY                                           ; $2204
+    ld   a, TILE_FLASHING_PIECE+1                                          ; $2204
 
 ; set for entire row
 .flashRow:
@@ -646,7 +669,7 @@ ShiftEntireGameRamBufferDownARow:
 
 ; clear top row
     ld   hl, wGameScreenBuffer+2                                 ; $2280
-    ld   a, TILE_EMPTY                                           ; $2283
+    ld   a, TILE_FLASHING_PIECE+1                                            ; $2283
     ld   b, GAME_SQUARE_WIDTH                                    ; $2285
 
 .clearTopRow:
@@ -1332,9 +1355,11 @@ RetZIfNoCollisionForPiece:
     add  HIGH(wGameScreenBuffer-_SCRN0)                          ; $2587
     ld   h, a                                                    ; $2589
     ld   a, [hl]                                                 ; $258a
+    cp   TILE_FLASHING_PIECE+1                                               ; $258b
+    jr   z, .empty
     cp   TILE_EMPTY                                              ; $258b
     jr   nz, .notEmpty                                           ; $258d
-
+.empty
 ; is empty tile, get tile idx address and inc to next sprite Y
     pop  bc                                                      ; $258f
     pop  hl                                                      ; $2590
@@ -1446,3 +1471,5 @@ ConvertFromObjectTileToBGTile:
 
 PieceTileConversionLookUpTable:
     db $8f, $89, $8a, $8b, $80, $81, $82, $83, $84, $85, $86, $88
+PieceColorLookUpTable:
+    db $04, $01, $00, $02, $02, $05, $03
