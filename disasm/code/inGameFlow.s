@@ -1445,7 +1445,7 @@ InGameAddPieceToVram:
     jr   nz, .nextSquareOfPiece                                  ; $25cd
 
 .nextState:
-    ld   a, FALLING_PIECE_CHECK_COMPLETED_ROWS                   ; $25cf
+    ld   a, 1                   ; $25cf
     ldh  [hPieceFallingState], a                                 ; $25d1
 
 ; hide active piece
@@ -1468,8 +1468,88 @@ ConvertFromObjectTileToBGTile:
     pop hl
     ret
 
+InGameAddPieceToVram1:
+    ; ret if wrong state
+    ldh  a, [hPieceFallingState]                                 ; $25a1
+    cp   FALLING_PIECE_HIT_BOTTOM                                ; $25a3
+    ret  nz                                                      ; $25a5
+    
+    ld a, 1
+    ld [rVBK], a
+    ; piece is 4 squares, get oam details for played piece
+    ld   hl, wOam+OAM_SIZEOF*4                                   ; $25a6
+    ld   b, $04                                                  ; $25a9
+    
+.nextSquareOfPiece:
+; get square Y
+    ld   a, [hl+]                                                ; $25ab
+    ldh  [hCurrPieceSquarePixelY], a                             ; $25ac
 
+; if square X = 0, we're done here
+    ld   a, [hl+]                                                ; $25ae
+    and  a                                                       ; $25af
+    jr   z, .nextState                                           ; $25b0
+
+    ldh  [hCurrPieceSquarePixelX], a                             ; $25b2
+    
+; preserve while getting screen addr of square
+    push hl                                                      ; $25b4
+    push bc                                                      ; $25b5
+    call GetScreen0AddressOfPieceSquare                          ; $25b6
+; screen 0 addr in de
+    push hl                                                      ; $25b9
+    pop  de                                                      ; $25ba
+    pop  bc                                                      ; $25bb
+    pop  hl                                                      ; $25bc
+    
+.waitUntilVramAndOamFree:
+    ldh  a, [rSTAT]                                              ; $25bd
+    and  STATF_LCD                                               ; $25bf
+    jr   nz, .waitUntilVramAndOamFree                            ; $25c1
+    
+; store attribute index into screen 0
+    inc l
+    ld   a, [hl]
+; convert from object palette to bg palette
+    push hl                                   ; $2016
+    ld hl, PieceBGColorLookUpTable
+    add a, l
+    ld l, a
+    ld a, [hl]
+; Color
+    pop hl
+    push af
+.waitVRAMB
+    ldh a, [rSTAT]
+    and STATF_BUSY
+    jr nz, .waitVRAMB
+    pop af                                                ; $25c3
+    ld   [de], a                                                 ; $25c4
+    
+; as well as game screen buffer
+    ld c, a
+    ld   a, d                                                    ; $25c5
+    add  HIGH(sGameScreenBufferAttr-_SCRN0)                          ; $25c6
+    ld   d, a                                                    ; $25c8
+    ld a, c                                               ; $25c9
+    ld   [de], a                                                 ; $25ca
+    inc  l                                                       ; $25cb
+    dec  b                                                       ; $25cc
+    jr   nz, .nextSquareOfPiece                                  ; $25cd
+   
+.nextState:
+    ld   a, FALLING_PIECE_CHECK_COMPLETED_ROWS                   ; $25cf
+    ldh  [hPieceFallingState], a                                 ; $25d1
+    
+; hide active piece
+    ld   hl, wSpriteSpecs                                        ; $25d3
+    ld   [hl], SPRITE_SPEC_HIDDEN    
+    xor a
+    ld [rVBK], a                            ; $25d6
+    ret                                                          ; $25d8
 PieceTileConversionLookUpTable:
     db $8f, $89, $8a, $8b, $80, $81, $82, $83, $84, $85, $86, $88
 PieceColorLookUpTable:
     db $04, $01, $00, $02, $02, $05, $03
+PieceBGColorLookUpTable:
+    db $00, $01, $02, $03, $04, $01

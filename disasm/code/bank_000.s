@@ -1339,7 +1339,8 @@ GameState00_InGameMain:
 	call InGameCheckButtonsPressed                                  ; $1bde
 	call InGameHandlePieceFalling.start                             ; $1be1
 	call InGameCheckIfAnyTetrisRowsComplete                         ; $1be4
-	call InGameAddPieceToVram                                       ; $1be7
+	call InGameAddPieceToVram  
+	call InGameAddPieceToVram1                                       ; $1be7
 	call ShiftEntireGameRamBufferDownARow                           ; $1bea
 	call AddOnCompletedLinesScore                                   ; $1bed
 

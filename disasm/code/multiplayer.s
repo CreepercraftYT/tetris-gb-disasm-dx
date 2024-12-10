@@ -1229,7 +1229,8 @@ GameState1a_2PlayerInGameMain:
     call InGameCheckButtonsPressed                               ; $0b48
     call InGameHandlePieceFalling.start                          ; $0b4b
     call InGameCheckIfAnyTetrisRowsComplete                      ; $0b4e
-    call InGameAddPieceToVram                                    ; $0b51
+    call InGameAddPieceToVram     
+    call InGameAddPieceToVram1                                ; $0b51
     call ShiftEntireGameRamBufferDownARow                        ; $0b54
     call CheckAlmostLosingStatus                                 ; $0b57
 
