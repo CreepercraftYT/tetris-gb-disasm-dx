@@ -95,6 +95,12 @@ Palettes_InGameGuideline::
 Palettes_InGameSega::
 	incbin "data/palettes_inGameSega.bin"
 
+Palettes_BoardBackgroundStart::
+	incbin "data/palettes_boardBackgroundStart.bin"
+
+Palettes_BoardBackgroundTransition::
+	incbin "data/palettes_boardBackgroundTransition.bin"
+
 Attributes_TitleScreen::
 	incbin "data/palmap_titleScreen.bin"
 
@@ -106,6 +112,18 @@ Attributes_ATypeSelectionScreen::
 
 Attributes_BTypeSelectionScreen::
 	incbin "data/palmap_bTypeSelectionScreen.bin"
+
+Attributes_ATypeInGame::
+	incbin "data/palmap_aTypeInGame.bin"
+
+Attributes_BTypeInGame::
+	incbin "data/palmap_bTypeInGame.bin"
+
+Layout_ATypePaused::
+	incbin "data/layout_aTypePaused.bin"
+
+Layout_BTypePaused::
+	incbin "data/layout_bTypePaused.bin"
 .end
 Layout_DMG::
 	incbin "data/layout_dmg.bin"

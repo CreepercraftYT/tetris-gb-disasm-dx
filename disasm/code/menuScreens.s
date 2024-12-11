@@ -312,6 +312,11 @@ GameState10_ATypeSelectionInit:
 	ld a, [sIsDay_DuskDawn_Night]
 	cp a, 0
 	jr z, .noPalAdjA
+	ld c, a
+	ld a, [sOptionDayNightCycle]
+	cp a, 1
+	ld a, c
+	jr z, .noPalAdjA
 	ld hl, 128
 .adjLoopA
 	dec a
@@ -330,7 +335,12 @@ GameState10_ATypeSelectionInit:
 	ld hl, 0
 	ld a, [sIsDay_DuskDawn_Night]
 	cp a, 0
-	jr z, .noPalAdjB   
+	jr z, .noPalAdjB  
+	ld c, a
+	ld a, [sOptionDayNightCycle]
+	cp a, 1
+	ld a, c
+	jr z, .noPalAdjB 
 	ld hl, 128
 .adjLoopB
 	dec a

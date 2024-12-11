@@ -924,7 +924,7 @@ GameState0a_InGameInit:
 ; and vram dest low byte of level number in A
 	ldh  a, [hGameType]                                             ; $1a29
 
-	ld   de, Layout_BTypeInGame                                     ; $1a2b
+	ld   de, Attributes_BTypeInGame                                     ; $1a2b
 	ld   hl, hBTypeLevel                                            ; $1a2e
 	cp   GAME_TYPE_B_TYPE                                           ; $1a31
 	ld   a, LOW($98AF)                                              ; $1a33
@@ -933,7 +933,7 @@ GameState0a_InGameInit:
 ; is A-type
 	ld   a, LOW($98f1)                                              ; $1a37
 	ld   hl, hATypeLevel                                            ; $1a39
-	ld   de, Layout_ATypeInGame                                     ; $1a3c
+	ld   de, Attributes_ATypeInGame                                     ; $1a3c
 
 .afterGameTypeCheck:
 ; cache vram dest for level
@@ -945,12 +945,23 @@ GameState0a_InGameInit:
 	ldh  [hATypeLinesThresholdToPassForNextLevel], a                ; $1a43
 
 ; copy layout, pop layout address and draw to screen 1 as well
-	call CopyLayoutToScreen0                                        ; $1a45
-	pop  de                                                         ; $1a48
-	ld   hl, _SCRN1                                                 ; $1a49
-	call CopyLayoutToHL                                             ; $1a4c
-	ld a, BANK_DEMO_AND_NIGHT_GRAPHICS
+    ld a, BANK_DEMO_AND_NIGHT_GRAPHICS
 	ld [rROMB0], a
+	call CopyLayoutAndAttrToScreen0                                        ; $1a45        
+	ld hl, Layout_ATypePaused
+	ld de, Attributes_ATypeInGame
+	ld a, h
+	sub a, d
+	ld h, a
+	ld a, l
+	sub a, e
+	ld l, a
+	pop  de
+	add hl, de
+	ld d, h
+	ld e, l                                                 ; $1a48
+	ld   hl, _SCRN1                                                 ; $1a49
+	call CopyLayoutAndAttrToHL                                             ; $1a4c
 	ld hl, 0
 	ld a, [sIsDay_DuskDawn_Night]
 	cp a, 0
@@ -1013,14 +1024,31 @@ GameState0a_InGameInit:
 	ld b, $80
 	ld c, 64
 	call CopyPalettesToCram   
+	ld a, [hGameType]
+	cp a, $77
+	jr z, .bType
+	ld a, [hATypeLevel]
+	cp a, 5
+	jr nc, .color2A
+.color1A
+    ld de, Palettes_BoardBackgroundStart
+.color2A
+	ld de, Palettes_BoardBackgroundStart+2
+.bType
+	ld a, [hBTypeLevel]
+	cp a, 5
+	jr nc, .color2A
+.color1B
+	ld de, Palettes_BoardBackgroundStart
+.color2B
+	ld de, Palettes_BoardBackgroundStart+2
+.copy
+	ld hl, rBCPS
+	ld c, 2
+	ld b, 28+$80
+	call CopyPalettesToCram
 	ld a, BANK_GRAPHICS_AND_LAYOUTS
-	ld [rROMB0], a       
-
-; screen 1 is for pause text
-	ld   de, GameInnerScreenLayout_Pause                            ; $1a4f
-	ld   hl, _SCRN1+$63                                             ; $1a52
-	ld   c, $0a                                                     ; $1a55
-	call CopyGameScreenInnerText                                    ; $1a57
+	ld [rROMB0], a                                       ; $1a57
 
 ; get vram dest address for level num
 	ld   h, HIGH(_SCRN0)                                            ; $1a5a
