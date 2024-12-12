@@ -1,5 +1,5 @@
 
-GameState24_CopyrightDisplay:
+GameState24_CopyrightDisplay::
 ; switch to bank 1 for graphics data	
 	ld a, BANK_GRAPHICS_AND_LAYOUTS
 	ld [rROMB0], a
@@ -131,7 +131,7 @@ GameState35_CopyrightCanContinue:
 	ret                                                             ; $03ad
 
 
-GameState06_TitleScreenInit:
+GameState06_TitleScreenInit::
 ; switch to bank 1 for graphics data	
 	ld a, BANK_GRAPHICS_AND_LAYOUTS
 	ld [rROMB0], a
@@ -610,7 +610,12 @@ GameState07_TitleScreenMain:
 
 .setCursorY:
     ld   [wOam+OAM_Y], a                                            ; $04fe  
-      
+	ld hl, hSelectedOption
+	ld a, [hl]
+	cp a, 4
+	jp z, .hours
+	cp a, 5
+	jp z, .minutes
 .checkButtonsPressedOptions
 	bit PADB_DOWN, b
     jp nz, .pressedDownOptions
@@ -765,6 +770,8 @@ GameState07_TitleScreenMain:
 	ld a, $0A
 	ld [$0000], a
 .hours
+	ld a, 4
+	ld [hSelectedOption], a
 ; Access Hour Register
     xor a
 	ld [$6000], a
@@ -779,11 +786,9 @@ GameState07_TitleScreenMain:
 	ld a, "v"
 	ld   [wOam+OAM_TILE_IDX], a 
 	ld a, [$a000]
-	push af
-	call PollInput
-	ldh  a, [hButtonsPressed]                                       ; $04a2
+	ld d, a
+	ldh  a, [hButtonsPressed]                                     ; $04a2
 	ld   b, a                                                       ; $04a4
-	pop af
 
 	bit  PADB_RIGHT, b                                              ; $04ab
 	jp   nz, .minutes                                          ; $04ad
@@ -796,8 +801,11 @@ GameState07_TitleScreenMain:
 
 	bit PADB_B, b
 	jp nz, .exit
-	jr z, .hours
+	xor a
+	ld [$4000], a
+	ret z
 .decreaseHours
+	ld a, d
 	dec a
 	cp a, $ff
     jr nz, .updateDecH
@@ -812,8 +820,12 @@ GameState07_TitleScreenMain:
     ldi [hl], a
     ld a, c
     ld [hl], a
-    jr .hours
+	xor a
+	ld [$4000], a
+;    jp .hours
+	ret
 .increaseHours
+	ld a, d
 	inc a
 	cp a, 24
     jr nz, .updateIncH
@@ -828,8 +840,13 @@ GameState07_TitleScreenMain:
     ldi [hl], a
     ld a, c
     ld [hl], a
-    jp .hours
+	xor a
+	ld [$4000], a
+;    jp .hours
+	ret 
 .minutes
+	ld a, 5
+	ld [hSelectedOption], a
 	; Access Minute Register
 	xor a
 	ld [$6000], a
@@ -844,11 +861,10 @@ GameState07_TitleScreenMain:
 	ld a, "v"
 	ld   [wOam+OAM_TILE_IDX], a 
 	ld a, [$a000]
-	push af
-	call PollInput
-	ldh  a, [hButtonsPressed]                                       ; $04a2
+	ld d, a
+	ldh  a, [hButtonsPressed]                                      ; $04a2
 	ld   b, a                                                       ; $04a4
-	pop af
+	ld a, [$a000]
 
 	bit  PADB_LEFT, b                                              ; $04ab
 	jp   nz, .hours                                          ; $04ad
@@ -864,8 +880,11 @@ GameState07_TitleScreenMain:
 
 	bit PADB_START, b
 	jp nz, .exit
-	jp z, .minutes
+	xor a
+	ld [$4000], a
+	ret z
 .decreaseMinutes
+	ld a, d
 	dec a
 	cp a, $ff
     jr nz, .updateDecM
@@ -884,14 +903,18 @@ GameState07_TitleScreenMain:
 	ld [$4000], a
 	xor a
 	ld [$a000], a
-    jr .minutes
+	ld [$4000], a
+;   jp .minutes
+    ret
 .increaseMinutes
+	ld a, d
 	inc a
 	cp a, 60
     jr nz, .updateIncM
 	ld a, 0
 .updateIncM
 	ld [$a000], a
+	call SeparateTens
     ld hl, $9b84
 	call WaitVRAM
     ld c, a
@@ -903,13 +926,17 @@ GameState07_TitleScreenMain:
 	ld [$4000], a
 	xor a
 	ld [$a000], a
-    jp .minutes
+	ld [$4000], a
+;    jp .minutes
+    ret
 .exit
 	; invert the palette back
 	call InvertPalettes
 	; put the correct cursor tile
 	ld a, ">"
-	ld   [wOam+OAM_TILE_IDX], a 
+	ld   [wOam+OAM_TILE_IDX], a
+	ld a, 3
+	ld [hSelectedOption], a 
     ret
 SeparateTens::
 ; in: a: value <100
@@ -944,3 +971,40 @@ ChangeToggleTile::
     call WaitVRAM
     ld [hl], a
     ret
+
+;DemocracyInput::
+;	ld c, 6
+;	ld hl, wPollInputResults
+;.loop
+;	ldi a, [hl]
+;	cp a, 0
+;	jr z, .zeroInput
+;.nonZeroInput
+;	inc b
+;	ld d, h
+;	ld e, l
+;	dec de
+;.zeroInput
+;	dec c
+;	jr nz, .loop
+;.checkDemocracy
+;	ld a, b
+;	cp a, 5
+;	jr c, .noInput
+;.input
+;	ld a, [de]
+;	ld [hButtonsPressed], a
+;	ret
+;.noInput
+;	xor a 
+;	ld [hButtonsPressed], a
+;	ret
+	
+WaitVRAM::
+	push af
+.loop
+	ldh a, [rSTAT]
+	and STATF_BUSY
+	jr nz, .loop
+	pop af  
+	ret

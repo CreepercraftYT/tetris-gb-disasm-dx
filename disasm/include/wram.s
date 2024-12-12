@@ -201,3 +201,8 @@ wNoiseEffectFrameCounterThreshold:: ; dffb
 wNoiseEffectMiscCounter:: ; $dffc
     db
 
+wBoardBackgroundColorTransitionState::
+    ds 1
+
+wTransitionTimer::
+    ds 2

@@ -14,13 +14,11 @@ GameMusicTypeInitWithoutDisablingSerialRegs:
 
 ; turn off LCD, load screen, then clear oam
     call TurnOffLCD                                              ; $144f
-    call LoadAsciiAndMenuScreenGfx                               ; $1452
-    ld   de, Layout_GameMusicTypeScreen                          ; $1455
-    call CopyLayoutToScreen0 
+    call LoadAsciiAndMenuScreenGfx                               ; $1452 
     ld a, BANK_DEMO_AND_NIGHT_GRAPHICS
 	ld [rROMB0], a
     ld   de, Attributes_GameMusicTypeScreen
-    call CopyAttrToScreen0   
+    call CopyLayoutAndAttrToScreen0   
     ld a, BANK_GRAPHICS_AND_LAYOUTS
 	ld [rROMB0], a                                 ; $1458
     call Clear_wOam                                              ; $145b
@@ -221,7 +219,10 @@ GameState0e_GameTypeMain:
     jr   nz, .pressedStart                                       ; $1531
 
     bit  PADB_A, b                                               ; $1533
-    jr   nz, .pressedA                                           ; $1535
+    jr   nz, .pressedA
+    
+    bit  PADB_B, b                                               ; $1533
+    jr   nz, .pressedB; $1535
 
 ; inc into spot in sprite spec struct where spec X is
     inc  e                                                       ; $1537
@@ -292,7 +293,11 @@ GameState0e_GameTypeMain:
 
 .pressedA:
     ld   a, GS_MUSIC_TYPE_MAIN                                   ; $1577
-    jr   .setGameStateClearSpecIdx                               ; $1579
+    jr   .setGameStateClearSpecIdx 
+    
+.pressedB:
+    ; Return to the title screen
+    call Boot; $1579
 
 
 GameState10_ATypeSelectionInit:
@@ -302,12 +307,10 @@ GameState10_ATypeSelectionInit:
 
 ; load gfx and data with lcd off, and clear oam
     call TurnOffLCD                                              ; $157b
-    ld   de, Layout_ATypeSelectionScreen                         ; $157e
-    call CopyLayoutToScreen0 
     ld a, BANK_DEMO_AND_NIGHT_GRAPHICS
 	ld [rROMB0], a
     ld   de, Attributes_ATypeSelectionScreen
-    call CopyAttrToScreen0  
+    call CopyLayoutAndAttrToScreen0  
 	ld hl, 0
 	ld a, [sIsDay_DuskDawn_Night]
 	cp a, 0
@@ -499,13 +502,11 @@ GameState12_BTypeSelectionInit:
 	ld [rROMB0], a
 
 ; load gfx, layout and clear oam while lcd off
-    call TurnOffLCD                                              ; $1629
-    ld   de, Layout_BTypeSelectionScreen                         ; $162c
-    call CopyLayoutToScreen0  
+    call TurnOffLCD                                              ; $1629 
     ld a, BANK_DEMO_AND_NIGHT_GRAPHICS
 	ld [rROMB0], a
     ld   de, Attributes_BTypeSelectionScreen
-    call CopyAttrToScreen0 
+    call CopyLayoutAndAttrToScreen0 
     ld hl, 0
 	ld a, [sIsDay_DuskDawn_Night]
 	cp a, 0

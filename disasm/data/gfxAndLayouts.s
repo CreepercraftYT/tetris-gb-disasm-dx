@@ -74,6 +74,9 @@ Layout_RocketScene_Sunrise_Sunset::
 	INCBIN "data/layout_rocketScene_sunrise_set.bin"
 .end
 
+PieceColorLookUpTable:
+    db $04, $01, $00, $02, $02, $05, $03
+.end
 SECTION "Night Layouts", ROMX[$4200], BANK[$3]
 Layout_TitleScreen_Night::
     INCBIN "data/layout_titleScreen_night.bin"
@@ -127,3 +130,91 @@ Layout_BTypePaused::
 .end
 Layout_DMG::
 	incbin "data/layout_dmg.bin"
+
+IsDMG::
+	ld a, 1 
+	ld [rROMB0], a
+	call CopyAsciiAndTitleScreenTileData
+	ld a, 3
+	ld [rROMB0], a
+	ld de, Layout_DMG
+	call CopyLayoutToScreen0
+	ld a, %11100100
+	ld [rBGP], a 
+	jr IsDMG
+.end
+BoardBackgroundColorTransition::
+	; Return if not in the correct state
+	ld a, [wBoardBackgroundColorTransitionState]
+	and a
+	ret z
+	; are we already doing the transition?
+	ld a, [wTransitionTimer]
+	and a
+	jr nz, .skipTimerSet
+	; set the timer
+	ld a, 15
+	ld [wTransitionTimer], a
+	xor a
+	ld [wTransitionTimer+1], a
+.skipTimerSet
+	; get the correct color offset
+	ld de, Palettes_BoardBackgroundTransition
+	; Level Color
+	ld a, [wBoardBackgroundColorTransitionState]
+	dec a
+	add a
+	add a
+	add a
+	ld h, 0
+	ld l, a
+	add hl, de
+	ld d, h
+	ld e, l
+	; Time Color
+	ld a, [sIsDay_DuskDawn_Night]
+	add a
+	add a
+	add a
+	add a
+	add a
+	add a
+	add a, 2
+	ld h, 0
+	ld l, a
+	add hl, de
+	ld d, h
+	ld e, l
+.updateColor
+	ld a, [wTransitionTimer+1]
+	ld h, 0
+	ld l, a
+	add hl, de
+	ld d, h
+	ld e, l
+	ld hl, rBCPS
+	ld c, 2
+	ld b, 28+$80
+	call CopyPalettesToCram
+	ld hl, wTransitionTimer
+	dec [hl]
+	ld a, [hl]
+	and a
+	jp z, .doneWaiting
+	ret
+.doneWaiting
+    ld a, 15
+	ld [wTransitionTimer], a
+	ld a, [wTransitionTimer+1]
+	add a, 2
+	ld [wTransitionTimer+1], a
+	cp a, 8
+	jr z, .doneTransition
+	ret
+.doneTransition
+	xor a
+	ld [wBoardBackgroundColorTransitionState], a
+	ld [wTransitionTimer], a
+	ld [wTransitionTimer+1], a
+	ret
+SECTION "Rosy Retrospection Data", ROMX, BANK[$4]

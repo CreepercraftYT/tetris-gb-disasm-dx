@@ -1,4 +1,6 @@
 PlayNextPieceLoadNextAndHiddenPiece:
+    ld a, 2
+    ld [rROMB0], a
 ; visible
     ld   hl, wSpriteSpecs                                        ; $2007
     ld   [hl], $00                                               ; $200a
@@ -1371,6 +1373,32 @@ CheckIfATypeNextLevelReached:
 
 ; else inc that lines threshold, and put low digit in C
     inc  [hl]                                                    ; $2474
+    ld a, [hl]
+.lv5
+    cp a, 5
+    jr nz, .lv10
+    ld a, 1
+    ld [wBoardBackgroundColorTransitionState], a
+    jr .continue
+.lv10
+    cp a, 10
+    jr nz, .lv15
+    ld a, 2
+    ld [wBoardBackgroundColorTransitionState], a
+    jr .continue
+.lv15
+    cp a, 15
+    jr nz, .lv20
+    ld a, 3
+    ld [wBoardBackgroundColorTransitionState], a
+    jr .continue
+.lv20
+    cp a, 20
+    jr nz, .continue
+    ld a, 4
+    ld [wBoardBackgroundColorTransitionState], a
+    jr .continue
+.continue 
     call ABisBCDofValInHL                                        ; $2475
     and  $0f                                                     ; $2478
     ld   c, a                                                    ; $247a
@@ -1705,12 +1733,7 @@ InGameAddPieceToVram:
     ld   a, [hl]
 ; convert from object tile to bg tile
     call ConvertFromObjectTileToBGTile 
-    push af
-.waitVRAMB
-    ldh a, [rSTAT]
-    and STATF_BUSY
-    jr nz, .waitVRAMB
-	pop af                                                ; $25c3
+    call WaitVRAM                                              ; $25c3
     ld   [de], a                                                 ; $25c4
 
 ; as well as game screen buffer
@@ -1793,17 +1816,13 @@ InGameAddPieceToVram1:
 ; convert from object palette to bg palette
     push hl                                   ; $2016
     ld hl, PieceBGColorLookUpTable
+    inc a
     add a, l
     ld l, a
     ld a, [hl]
 ; Color
     pop hl
-    push af
-.waitVRAMB
-    ldh a, [rSTAT]
-    and STATF_BUSY
-    jr nz, .waitVRAMB
-    pop af                                                ; $25c3
+    call WaitVRAM                                              ; $25c3
     ld   [de], a                                                 ; $25c4
     
 ; as well as game screen buffer
@@ -1829,7 +1848,5 @@ InGameAddPieceToVram1:
     ret                                                          ; $25d8
 PieceTileConversionLookUpTable:
     db $8f, $89, $8a, $8b, $80, $81, $82, $83, $84, $85, $86, $88
-PieceColorLookUpTable:
-    db $04, $01, $00, $02, $02, $05, $03
 PieceBGColorLookUpTable:
-    db $00, $01, $02, $03, $04, $01
+    db $00, $00, $01, $02, $03, $04, $01

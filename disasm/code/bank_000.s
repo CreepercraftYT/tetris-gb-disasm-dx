@@ -216,8 +216,8 @@ SECTION "Begin", ROM0[$150]
 
 Begin:
 ; check if running on GBC or DMG
-	cp a, 1
-	call z, IsDMG
+;	cp a, 1
+;	call z, IsDMGSwitch
 ; Switch Speed
     ldh a, [rKEY1]
 	and a, $80
@@ -332,7 +332,10 @@ VBlankInterruptHandler:
 	call CopyRamBufferRow17ToVram                                   ; $01cf
 	call ProcessScoreUpdatesAfterBTypeLevelDone                     ; $01d2
 	call hOamDmaFunction                                            ; $01d5
-	call DisplayHighScoresAndNamesForLevel                          ; $01d8
+	call DisplayHighScoresAndNamesForLevel   
+	ld a, 3
+	ld [rROMB0], a
+	call BoardBackgroundColorTransition                       ; $01d8
 	call UpdateClock
 
 ; if just added drops to score..
@@ -1032,16 +1035,64 @@ GameState0a_InGameInit:
 	jr nc, .color2A
 .color1A
     ld de, Palettes_BoardBackgroundStart
+	ld a, [sIsDay_DuskDawn_Night]
+	add a
+	add a
+	add a
+	add a
+	add a
+	ld h, 0
+	ld l, a
+	add hl, de
+	ld d, h
+	ld e, l
+	jr .copy
 .color2A
 	ld de, Palettes_BoardBackgroundStart+2
+	ld a, [sIsDay_DuskDawn_Night]
+	add a
+	add a
+	add a
+	add a
+	add a
+	ld h, 0
+	ld l, a
+	add hl, de
+	ld d, h
+	ld e, l
+	jr .copy
 .bType
 	ld a, [hBTypeLevel]
 	cp a, 5
-	jr nc, .color2A
+	jr nc, .color2B
 .color1B
 	ld de, Palettes_BoardBackgroundStart
+	ld a, [sIsDay_DuskDawn_Night]
+	add a
+	add a
+	add a
+	add a
+	add a
+	ld h, 0
+	ld l, a
+	add hl, de
+	ld d, h
+	ld e, l
+	jr .copy
 .color2B
 	ld de, Palettes_BoardBackgroundStart+2
+	ld a, [sIsDay_DuskDawn_Night]
+	add a
+	add a
+	add a
+	add a
+	add a
+	ld h, 0
+	ld l, a
+	add hl, de
+	ld d, h
+	ld e, l
+	jr .copy
 .copy
 	ld hl, rBCPS
 	ld c, 2
@@ -2199,25 +2250,11 @@ UpdateClock::
 ColonTile::
 	db $00, $00, $18, $18, $18, $18, $00, $00, $00, $00, $18, $18, $18, $18, $00, $00 
 
-IsDMG::
-	ld a, 1 
-	ld [rROMB0], a
-	call CopyAsciiAndTitleScreenTileData
+IsDMGSwitch::
 	ld a, 3
 	ld [rROMB0], a
-	ld de, Layout_DMG
-	call CopyLayoutToScreen0
-	ld a, %11100100
-	ld [rBGP], a 
-	jr IsDMG
-WaitVRAM::
-	push af
-.loop
-    ldh a, [rSTAT]
-    and STATF_BUSY
-    jr nz, .loop
-	pop af
-	ret
+	call IsDMG
+
 INCLUDE "code/gfx.s"
 
 INCLUDE "data/spriteData.s"
