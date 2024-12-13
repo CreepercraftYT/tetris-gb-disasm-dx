@@ -52,19 +52,39 @@ DisplayRocketScene:
 	ld [rROMB0], a
 
 ; display gfx with lcd off
-    call TurnOffLCD                                              ; $11b2
+    call TurnOffLCD          
+    ld a, 1
+    ld [rROMB0], a                                    ; $11b2
     ld   hl, Gfx_RocketScene                                     ; $11b5
     ld   bc, Gfx_RocketScene.end-Gfx_RocketScene+$300            ; $11b8
     call CopyHLtoVramBCbytes                                     ; $11bb
+    ld a, 3
+	ld [rROMB0], a   ; $1dd8
+    ld de, Palettes_BType+64
+    ld a, 1
+    ld [sSkipBg], a
+    call LoadTimeBasedPalettes
+    ld a, 1
+	ld [rROMB0], a
 
 ; displayed on _SCRN1
-    ld   hl, _SCRN1+$3ff                                         ; $11be
-    call FillScreenFromHLdownWithEmptyTile                       ; $11c1
-
-    ld   hl, _SCRN1+$1c0                                         ; $11c4
-    ld   de, Layout_RocketScene                                  ; $11c7
-    ld   b, $04                                                  ; $11ca
-    call CopyLayoutBrowsToHL                                     ; $11cc
+    ld   hl, _SCRN1                 
+    ld a, [sIsDay_DuskDawn_Night]
+	inc a
+	ld [rROMB0], a
+	cp a, 2
+	jr z, .sunriseOrSunset
+	cp a, 3
+	jr z, .night
+	ld   de, Layout_RocketScene  
+	jr .copy         
+.sunriseOrSunset
+	ld   de, Layout_RocketScene_Sunrise_Sunset
+	jr .copy
+.night 
+	ld   de, Layout_RocketScene_Night    
+.copy                     ; $03ed                                  ; $11c7                                                  ; $11ca
+    call CopyLayoutAndAttrToHL                                     ; $11cc
 
 ; tall structure next to rocket
     ld   hl, _SCRN1+$ec                                          ; $11cf

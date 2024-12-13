@@ -11,54 +11,10 @@ GameState24_CopyrightDisplay::
 	call CopyLayoutToScreen0   
 	ld a, BANK_DEMO_AND_NIGHT_GRAPHICS
 	ld [rROMB0], a
-	ld hl, 0
-	ld a, [sIsDay_DuskDawn_Night]
-	cp a, 0
-	jr z, .noPalAdjA
-	ld c, a
-	ld a, [sOptionDayNightCycle]
-	cp a, 1
-	ld a, c
-	jr z, .noPalAdjA
-	ld hl, 128
-.adjLoopA
-	dec a
-	jr z, .noPalAdjA
-	add hl, hl
-	jr .adjLoopA
-.noPalAdjA
 	ld de, Palettes_TitleScreen
-	add hl, de
-	ld d, h
-	ld e, l
-	ld hl, rBCPS
-	ld b, $80
-	ld c, 64
-	call CopyPalettesToCram    
-	ld hl, 0
-	ld a, [sIsDay_DuskDawn_Night]
-	cp a, 0
-	jr z, .noPalAdjB  
-	ld c, a
-	ld a, [sOptionDayNightCycle]
-	cp a, 1
-	ld a, c
-	jr z, .noPalAdjB 
-	ld hl, 128
-.adjLoopB
-	dec a
-	jr z, .noPalAdjB
-	add hl, hl
-	jr .adjLoopB
-.noPalAdjB
-	ld de, Palettes_TitleScreen
-	add hl, de
-	ld d, h
-	ld e, l
-	ld hl, rOCPS
-	ld b, $80
-	ld c, 64
-	call CopyPalettesToCram   
+	xor a
+	ld [sSkipBg], a
+	call LoadTimeBasedPalettes
 	ld a, BANK_GRAPHICS_AND_LAYOUTS
 	ld [rROMB0], a                              ; $0372
 	call Clear_wOam                                                 ; $0375
@@ -197,59 +153,13 @@ GameState06_TitleScreenInit::
 .night 
 	ld   de, Layout_TitleScreen_Night    
 .copy                     ; $03ed
-	call CopyLayoutToScreen0        
+	call CopyLayoutAndAttrToScreen0        
 	ld a, BANK_DEMO_AND_NIGHT_GRAPHICS
 	ld [rROMB0], a  
-	ld   de, Attributes_TitleScreen
-	call CopyAttrToScreen0
-	ld hl, 0
-	ld a, [sIsDay_DuskDawn_Night]
-	cp a, 0
-	jr z, .noPalAdjA
-	ld c, a
-	ld a, [sOptionDayNightCycle]
-	cp a, 1
-	ld a, c
-	jr z, .noPalAdjA
-	ld hl, 128
-.adjLoopA
-	dec a
-	jr z, .noPalAdjA
-	add hl, hl
-	jr .adjLoopA
-.noPalAdjA
 	ld de, Palettes_TitleScreen
-	add hl, de
-	ld d, h
-	ld e, l
-	ld hl, rBCPS
-	ld b, $80
-	ld c, 64
-	call CopyPalettesToCram    
-	ld hl, 0
-	ld a, [sIsDay_DuskDawn_Night]
-	cp a, 0
-	jr z, .noPalAdjB  
-	ld c, a
-	ld a, [sOptionDayNightCycle]
-	cp a, 1
-	ld a, c
-	jr z, .noPalAdjB 
-	ld hl, 128
-.adjLoopB
-	dec a
-	jr z, .noPalAdjB
-	add hl, hl
-	jr .adjLoopB
-.noPalAdjB
-	ld de, Palettes_TitleScreen
-	add hl, de
-	ld d, h
-	ld e, l
-	ld hl, rOCPS
-	ld b, $80
-	ld c, 64
-	call CopyPalettesToCram   
+	xor a
+	ld [sSkipBg], a
+    call LoadTimeBasedPalettes
 	ld a, BANK_GRAPHICS_AND_LAYOUTS
 	ld [rROMB0], a  
 	xor a
@@ -352,8 +262,8 @@ PlayDemo:
 ; load screen while lcd off
 	call TurnOffLCD                                                 ; $0460
 	call LoadAsciiAndMenuScreenGfx                                  ; $0463
-	ld   de, Layout_GameMusicTypeScreen                             ; $0466
-	call CopyLayoutToScreen0                                        ; $0469
+	ld   de, Attributes_GameMusicTypeScreen                            ; $0466
+	call CopyLayoutAndAttrToScreen0                                        ; $0469
 	call Clear_wOam                                                 ; $046c
 
 ; turn on LCD

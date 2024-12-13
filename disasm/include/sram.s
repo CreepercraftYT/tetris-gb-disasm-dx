@@ -43,3 +43,7 @@ sSramBufferAddressesForCompletedRows:: ;
 sIsSRAMInitialized::
     ds 1
  .end::
+
+sSkipBg::
+    ds 1
+.end

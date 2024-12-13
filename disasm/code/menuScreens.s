@@ -311,54 +311,10 @@ GameState10_ATypeSelectionInit:
 	ld [rROMB0], a
     ld   de, Attributes_ATypeSelectionScreen
     call CopyLayoutAndAttrToScreen0  
-	ld hl, 0
-	ld a, [sIsDay_DuskDawn_Night]
-	cp a, 0
-	jr z, .noPalAdjA
-	ld c, a
-	ld a, [sOptionDayNightCycle]
-	cp a, 1
-	ld a, c
-	jr z, .noPalAdjA
-	ld hl, 128
-.adjLoopA
-	dec a
-	jr z, .noPalAdjA
-	add hl, hl
-	jr .adjLoopA
-.noPalAdjA
-	ld de, Palettes_TitleScreen
-	add hl, de
-	ld d, h
-	ld e, l
-	ld hl, rBCPS
-	ld b, $80
-	ld c, 64
-	call CopyPalettesToCram    
-	ld hl, 0
-	ld a, [sIsDay_DuskDawn_Night]
-	cp a, 0
-	jr z, .noPalAdjB  
-	ld c, a
-	ld a, [sOptionDayNightCycle]
-	cp a, 1
-	ld a, c
-	jr z, .noPalAdjB 
-	ld hl, 128
-.adjLoopB
-	dec a
-	jr z, .noPalAdjB
-	add hl, hl
-	jr .adjLoopB
-.noPalAdjB
-	ld de, Palettes_TitleScreen
-	add hl, de
-	ld d, h
-	ld e, l
-	ld hl, rOCPS
-	ld b, $80
-	ld c, 64
-	call CopyPalettesToCram             
+	ld de, Palettes_TitleScreen    
+    xor a
+    ld [sSkipBg], a
+    call LoadTimeBasedPalettes     
     ld a, BANK_GRAPHICS_AND_LAYOUTS
 	ld [rROMB0], a                              ; $1581
     call DisplayDottedLinesForHighScore                          ; $1584
@@ -507,44 +463,10 @@ GameState12_BTypeSelectionInit:
 	ld [rROMB0], a
     ld   de, Attributes_BTypeSelectionScreen
     call CopyLayoutAndAttrToScreen0 
-    ld hl, 0
-	ld a, [sIsDay_DuskDawn_Night]
-	cp a, 0
-	jr z, .noPalAdjA
-	ld hl, 128
-.adjLoopA
-	dec a
-	jr z, .noPalAdjA
-	add hl, hl
-	jr .adjLoopA
-.noPalAdjA
-	ld de, Palettes_TitleScreen
-	add hl, de
-	ld d, h
-	ld e, l
-	ld hl, rBCPS
-	ld b, $80
-	ld c, 64
-	call CopyPalettesToCram    
-	ld hl, 0
-	ld a, [sIsDay_DuskDawn_Night]
-	cp a, 0
-	jr z, .noPalAdjB   
-	ld hl, 128
-.adjLoopB
-	dec a
-	jr z, .noPalAdjB
-	add hl, hl
-	jr .adjLoopB
-.noPalAdjB
-	ld de, Palettes_TitleScreen
-	add hl, de
-	ld d, h
-	ld e, l
-	ld hl, rOCPS
-	ld b, $80
-	ld c, 64
-	call CopyPalettesToCram      
+	ld de, Palettes_TitleScreen  
+    xor a
+    ld [sSkipBg], a
+    call LoadTimeBasedPalettes
     ld a, BANK_GRAPHICS_AND_LAYOUTS
 	ld [rROMB0], a                                   ; $162f
     call Clear_wOam                                              ; $1632

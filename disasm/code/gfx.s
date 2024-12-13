@@ -334,7 +334,7 @@ CopyLayoutAndAttrToScreen0::
 
 ; in: DE - source addr
 ; in: HL - vram dest addr
-CopyLayoutAndAttrToHL:
+CopyLayoutAndAttrToHL::
 	ld   b, SCREEN_TILE_HEIGHT                                      ; $27ee
 
 ; in: B - number of rows to copy to
@@ -398,7 +398,8 @@ CopyToGameScreenUntilByteReadEquFFhThenSetVramTransfer:
 
 ; copy to dest
 	ld   [hl+], a                                                   ; $280c
-	inc  de                                                         ; $280d
+	inc  de     
+	inc  de 
 	dec  b                                                          ; $280e
 	jr   nz, .loop                                                  ; $280f
 
@@ -994,4 +995,39 @@ InvertPalettes::
 	ldh     [$FF00+C],A
 	dec     B
 	jr      nz,:-
+	ret
+
+LoadTimeBasedPalettes::
+	; in: DE = Source
+	ld hl, 0
+	ld a, [sIsDay_DuskDawn_Night]
+	cp a, 0
+	jr z, .noPalAdjA
+	ld c, a
+	ld a, [sOptionDayNightCycle]
+	cp a, 1
+	ld a, c
+	jr z, .noPalAdjA
+	ld hl, 128
+.adjLoopA
+	dec a
+	jr z, .noPalAdjA
+	add hl, hl
+	jr .adjLoopA
+.noPalAdjA
+	add hl, de
+	ld d, h
+	ld e, l
+	ld a, [sSkipBg]
+	and a
+	jr nz, .skipBg
+	ld hl, rBCPS
+	ld b, $80
+	ld c, 64
+	call CopyPalettesToCram    
+.skipBg
+	ld hl, rOCPS
+	ld b, $80
+	ld c, 64
+	call CopyPalettesToCram   
 	ret

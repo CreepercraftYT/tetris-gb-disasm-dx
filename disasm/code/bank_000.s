@@ -955,6 +955,7 @@ GameState0a_InGameInit:
 	ld de, Attributes_ATypeInGame
 	ld a, h
 	sub a, d
+	dec a
 	ld h, a
 	ld a, l
 	sub a, e
@@ -965,22 +966,6 @@ GameState0a_InGameInit:
 	ld e, l                                                 ; $1a48
 	ld   hl, _SCRN1                                                 ; $1a49
 	call CopyLayoutAndAttrToHL                                             ; $1a4c
-	ld hl, 0
-	ld a, [sIsDay_DuskDawn_Night]
-	cp a, 0
-	jr z, .noPalAdjA
-	ld c, a
-	ld a, [sOptionDayNightCycle]
-	cp a, 1
-	ld a, c
-	jr z, .noPalAdjA
-	ld hl, 128
-.adjLoopA
-	dec a
-	jr z, .noPalAdjA
-	add hl, hl
-	jr .adjLoopA
-.noPalAdjA
     ld a, [sOptionColors]
 	cp a, 1
 	jr z, .segaColors
@@ -989,44 +974,9 @@ GameState0a_InGameInit:
 .segaColors
 	ld de, Palettes_InGameSega
 .loadPalettes
-	add hl, de
-	ld d, h
-	ld e, l
-	ld hl, rBCPS
-	ld b, $80
-	ld c, 64
-	call CopyPalettesToCram    
-	ld hl, 0
-	ld a, [sIsDay_DuskDawn_Night]
-	cp a, 0
-	jr z, .noPalAdjB   
-	ld c, a
-	ld a, [sOptionDayNightCycle]
-	cp a, 1
-	ld a, c
-	jr z, .noPalAdjB
-	ld hl, 128
-.adjLoopB
-	dec a
-	jr z, .noPalAdjB
-	add hl, hl
-	jr .adjLoopB
-.noPalAdjB
-	ld a, [sOptionColors]
-	cp a, 1
-	jr z, .segaColorsObj
-	ld de, Palettes_InGameGuideline+64
-	jr .loadObjPalettes
-.segaColorsObj
-	ld de, Palettes_InGameSega+64
-.loadObjPalettes
-	add hl, de
-	ld d, h
-	ld e, l
-	ld hl, rOCPS
-	ld b, $80
-	ld c, 64
-	call CopyPalettesToCram   
+	xor a
+	ld [sSkipBg], a
+    call LoadTimeBasedPalettes
 	ld a, [hGameType]
 	cp a, $77
 	jr z, .bType

@@ -7,6 +7,9 @@ GameState05_BTypeLevelFinished:
 ; display layout
     ld   hl, wGameScreenBuffer+2                                 ; $1d2a
     ld   de, GameScreenLayout_ScoreTotals                        ; $1d2d
+    call CopyToGameScreenUntilByteReadEquFFhThenSetVramTransfer 
+    ld   hl, sGameScreenBufferAttr+2                                 ; $1d2a
+    ld   de, GameScreenLayout_ScoreTotals+1                        ; $1d2d
     call CopyToGameScreenUntilByteReadEquFFhThenSetVramTransfer  ; $1d30
 
 ; jump if level 0
@@ -153,7 +156,18 @@ GameState22_DancersInit:
 	ld [rROMB0], a
     ld   hl, wGameScreenBuffer+2                                 ; $1dd2
     ld   de, GameScreenLayout_Dancers                            ; $1dd5
-    call CopyToGameScreenUntilByteReadEquFFhThenSetVramTransfer  ; $1dd8
+    call CopyToGameScreenUntilByteReadEquFFhThenSetVramTransfer
+    ld   hl, sGameScreenBufferAttr+2                                 ; $1dd2
+    ld   de, GameScreenLayout_Dancers+1                            ; $1dd5
+    call CopyToGameScreenUntilByteReadEquFFhThenSetVramTransfer
+    ld a, 3
+	ld [rROMB0], a   ; $1dd8
+    ld de, Palettes_BType+64
+    ld a, 1
+    ld [sSkipBg], a
+    call LoadTimeBasedPalettes
+    ld a, 1
+	ld [rROMB0], a
     call Clear_wOam                                              ; $1ddb
 
 ; load invisible dancers specs

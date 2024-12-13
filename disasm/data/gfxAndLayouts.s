@@ -5,13 +5,13 @@ Gfx_MenuScreens:
 	INCBIN "build/menuScreens.2bpp"
 .end:
 
-Layout_ATypeInGame:
-	INCBIN "data/layout_aTypeInGame.bin"
+;Layout_ATypeInGame:
+;	INCBIN "data/layout_aTypeInGame.bin"
 
 ;STATIC_ASSERT $4000-@ == BANK_0_END_LEN
-Layout_BTypeInGame::
+;Layout_BTypeInGame::
 	;INCBIN "data/layout_bTypeInGame.bin", 0, $4000-@
-	INCBIN "data/layout_bTypeInGame.bin"
+;	INCBIN "data/layout_bTypeInGame.bin"
 
     
 ;SECTION "ROM Bank $001", ROMX[$4000], BANK[$1]
@@ -32,14 +32,14 @@ Layout_Copyright::
 Layout_TitleScreen::
 	INCBIN "data/layout_titleScreen_day.bin"
 
-Layout_GameMusicTypeScreen::
-	INCBIN "data/layout_gameMusicTypeScreen.bin"
+;Layout_GameMusicTypeScreen::
+;	INCBIN "data/layout_gameMusicTypeScreen.bin"
 
-Layout_ATypeSelectionScreen::
-	INCBIN "data/layout_aTypeSelectionScreen.bin"
+;Layout_ATypeSelectionScreen::
+;	INCBIN "data/layout_aTypeSelectionScreen.bin"
 
-Layout_BTypeSelectionScreen::
-	INCBIN "data/layout_bTypeSelectionScreen.bin"
+;Layout_BTypeSelectionScreen::
+;	INCBIN "data/layout_bTypeSelectionScreen.bin"
 
 GameScreenLayout_Dancers::
 	INCBIN "data/gameScreenLayout_dancers.bin"
@@ -130,6 +130,9 @@ Layout_BTypePaused::
 .end
 Layout_DMG::
 	incbin "data/layout_dmg.bin"
+
+Palettes_BType::
+	incbin "data/palettes_bType.bin"
 
 IsDMG::
 	ld a, 1 
