@@ -216,8 +216,8 @@ SECTION "Begin", ROM0[$150]
 
 Begin:
 ; check if running on GBC or DMG
-;	cp a, 1
-;	call z, IsDMGSwitch
+	cp a, 1
+	call z, IsDMGSwitch
 ; Switch Speed
     ldh a, [rKEY1]
 	and a, $80
@@ -332,10 +332,12 @@ VBlankInterruptHandler:
 	call CopyRamBufferRow17ToVram                                   ; $01cf
 	call ProcessScoreUpdatesAfterBTypeLevelDone                     ; $01d2
 	call hOamDmaFunction                                            ; $01d5
-	call DisplayHighScoresAndNamesForLevel   
+	call DisplayHighScoresAndNamesForLevel  
 	ld a, 3
 	ld [rROMB0], a
-	call BoardBackgroundColorTransition                       ; $01d8
+	call AnimateGrid 
+	call BoardBackgroundColorTransition  
+	ld hl, $980f                     ; $01d8
 	call UpdateClock
 
 ; if just added drops to score..
@@ -474,6 +476,16 @@ Reset:
 	ld [sIsSRAMInitialized], a
 ; clear last page of wram
 .sramInitialized
+	ld a, 09
+	ld [rRAMB], a
+	ld a, [_SRAM]
+	ld c, a
+	ld a, 1
+	ld [_SRAM], a
+	xor a
+	ld [rRAMB], a
+	ld a, c
+	ld [sPlaceholder], a
 	xor  a                                                          ; $025a
 	ld   hl, $dfff                                                  ; $025b
 	ld   b, $00                                                     ; $025e
@@ -951,7 +963,7 @@ GameState0a_InGameInit:
     ld a, BANK_DEMO_AND_NIGHT_GRAPHICS
 	ld [rROMB0], a
 	call CopyLayoutAndAttrToScreen0                                        ; $1a45        
-	ld hl, Layout_ATypePaused
+	ld hl, Layout_ATypePaused+$100
 	ld de, Attributes_ATypeInGame
 	ld a, h
 	sub a, d
@@ -976,7 +988,33 @@ GameState0a_InGameInit:
 .loadPalettes
 	xor a
 	ld [sSkipBg], a
+	push de
     call LoadTimeBasedPalettes
+	ld a, [sOptionLights]
+	and a
+	jp z, .bgColor
+	ld a, [sIsDay_DuskDawn_Night]
+	cp a, 2
+	jp nz, .bgColor
+	pop de 
+	ld c, 40
+	ld b, $80
+	ld hl, rBCPS
+	push de
+	call CopyPalettesToCram
+	pop de
+	ld hl, 64
+	add hl, de
+	ld d, h
+	ld e, l
+	ld c, 48
+	ld b, $80
+	ld hl, rOCPS
+	call CopyPalettesToCram
+	jr .skipPop
+.bgColor
+	pop de
+.skipPop
 	ld a, [hGameType]
 	cp a, $77
 	jr z, .bType
@@ -1250,10 +1288,10 @@ PopulateDemoBTypeScreenWithBlocks:
 	ret                                                             ; $1b3f
 
 .layout:
-	db $85, $2f, $82, $86, $83, $2f, $2f, $80, $82, $85
-	db $2f, $82, $84, $82, $83, $2f, $83, $2f, $87, $2f
-	db $2f, $85, $2f, $83, $2f, $86, $82, $80, $81, $2f
-	db $83, $2f, $86, $83, $2f, $85, $2f, $85, $2f, $2f
+	db $85, $8d, $82, $86, $83, $8d, $8d, $80, $82, $85
+	db $8d, $82, $84, $82, $83, $8d, $83, $8d, $87, $8d
+	db $8d, $85, $8d, $83, $8d, $86, $82, $80, $81, $8d
+	db $83, $8d, $86, $83, $8d, $85, $8d, $85, $8d, $8d
 
 
 ; in: A - num to multiply to DE
@@ -1581,11 +1619,13 @@ InGame2PlayerCheckUnpaused:
 
 ; remove pause text
 	ld   hl, _SCRN0+$ee                                             ; $1cba
-	ld   b, TILE_BLACK                                              ; $1cbd
+	ld   de, _2PlayerUnpauseTiles                                             ; $1cbd
 	ld   c, $05                                                     ; $1cbf
 
 .loop:
-	call StoreBinHLwhenLCDFree                                      ; $1cc1
+	ld a, [de]
+	call StoreAinHLwhenLCDFree       
+	inc de                               ; $1cc1
 	inc  l                                                          ; $1cc4
 	dec  c                                                          ; $1cc5
 	jr   nz, .loop                                                  ; $1cc6
@@ -2090,6 +2130,9 @@ ConvertHexToDec::
 	ret
 
 UpdateClock::
+	ld a, [sRTCAvailable]
+	and a
+	ret z
 ; don't do it on 2 Players Results screen
     ld a, [hGameState]
 	cp a, $1F
@@ -2102,7 +2145,6 @@ UpdateClock::
     ld a, [sIsRocketScene]
 	cp a, 1
 	ret z
-	ld hl, $980f
 	ld e, 2
 .doHours
 	xor a
@@ -2167,6 +2209,16 @@ UpdateClock::
 	ret 
 .updateSIsDay_DuskDawn_Night
 	ld b, a
+	xor a
+	ld [rRAMB], a
+	ld a, [sOptionDayNightCycle]
+	and a
+	jr nz, .isDay
+	ld a, [sRTCAvailable]
+	and a
+	jr z, .isDay
+	ld a, $0A
+	ld [rRAMB], a
 	ld a, [hIsOptionMenu]
 	cp a, 1
 	jr z, .doMinutes
@@ -2196,14 +2248,24 @@ UpdateClock::
 	ld [$4000], a
 	ld a, 02
 	ld [sIsDay_DuskDawn_Night], a
-    jr .doMinutes
+    jp .doMinutes
 ColonTile::
 	db $00, $00, $18, $18, $18, $18, $00, $00, $00, $00, $18, $18, $18, $18, $00, $00 
 
 IsDMGSwitch::
 	ld a, 3
 	ld [rROMB0], a
-	call IsDMG
+IsDMG::
+	ld a, 1 
+	ld [rROMB0], a
+	call CopyAsciiAndTitleScreenTileData
+	ld a, 3
+	ld [rROMB0], a
+	ld de, Layout_DMG
+	call CopyLayoutToScreen0
+	ld a, %11100100
+	ld [rBGP], a 
+	jr IsDMG
 
 INCLUDE "code/gfx.s"
 

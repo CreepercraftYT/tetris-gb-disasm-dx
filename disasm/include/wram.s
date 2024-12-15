@@ -206,3 +206,6 @@ wBoardBackgroundColorTransitionState::
 
 wTransitionTimer::
     ds 2
+
+wUpdateTimer::
+    ds 2

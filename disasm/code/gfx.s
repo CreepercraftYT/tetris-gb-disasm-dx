@@ -108,50 +108,50 @@ SpriteSpecStruct_2PlayerHighsFlashing1:
 
 
 SpriteSpecStruct_StandingMarioCryingBabyMario:
-	db $00, $60, $60, SPRITE_SPEC_STANDING_MARIO, $80, $00
-	db $00, $60, $72, SPRITE_SPEC_STANDING_MARIO, $80, $20
-	db $00, $68, $38, SPRITE_SPEC_CRYING_MARIO_1, $80, $00
+	db $00, $60, $60, SPRITE_SPEC_STANDING_MARIO, $00, $06
+	db $00, $60, $72, SPRITE_SPEC_STANDING_MARIO, $00, $26
+	db $00, $68, $38, SPRITE_SPEC_CRYING_MARIO_1, $00, $07
 
 
 SpriteSpecStruct_StandingLuigiCryingBabyLuigi:
-	db $00, $60, $60, SPRITE_SPEC_STANDING_LUIGI, $80, $00
-	db $00, $60, $72, SPRITE_SPEC_STANDING_LUIGI, $80, $20
-	db $00, $68, $38, SPRITE_SPEC_CRYING_LUIGI_1, $80, $00
+	db $00, $60, $60, SPRITE_SPEC_STANDING_LUIGI, $00, $07
+	db $00, $60, $72, SPRITE_SPEC_STANDING_LUIGI, $00, $27
+	db $00, $68, $38, SPRITE_SPEC_CRYING_LUIGI_1, $00, $06
 
 
 SpriteSpecStruct_MariosFacingAway:
-	db $00, $60, $60, SPRITE_SPEC_MARIO_FACING_AWAY, $80, $00
-	db $00, $68, $38, SPRITE_SPEC_BABY_MARIO_FACING_AWAY, $80, $00
+	db $00, $60, $60, SPRITE_SPEC_MARIO_FACING_AWAY, $00, $06
+	db $00, $68, $38, SPRITE_SPEC_BABY_MARIO_FACING_AWAY, $00, $07
 
 
 SpriteSpecStruct_LuigisFacingAway:
-	db $00, $60, $60, SPRITE_SPEC_LUIGI_FACING_AWAY, $80, $00
-	db $00, $68, $38, SPRITE_SPEC_BABY_LUIGI_FACING_AWAY, $80, $00
+	db $00, $60, $60, SPRITE_SPEC_LUIGI_FACING_AWAY, $00, $07
+	db $00, $68, $38, SPRITE_SPEC_BABY_LUIGI_FACING_AWAY, $00, $06
 
 
 SpriteSpecStruct_Dancers:
-	db $80, $3f, $40, SPRITE_SPEC_VIOLINIST_2, $00, $00
-	db $80, $3f, $20, SPRITE_SPEC_GUITARIST_1, $00, $00
-	db $80, $3f, $30, SPRITE_SPEC_DOUBLE_BASS_1, $00, $00
-	db $80, $77, $20, SPRITE_SPEC_BELLY_DRUM_1, $00, $00
-	db $80, $87, $48, SPRITE_SPEC_COUPLE_1, $00, $00
-	db $80, $87, $58, SPRITE_SPEC_CLAPPER_1, $00, $00
-	db $80, $67, $4d, SPRITE_SPEC_JUMPER_1, $00, $00
-	db $80, $67, $5d, SPRITE_SPEC_KICKER_1, $00, $00
-	db $80, $8f, $88, SPRITE_SPEC_SWORDSMAN_1, $00, $00
-	db $80, $8f, $98, SPRITE_SPEC_SWORDSMAN_2, $00, $00
+	db $80, $3f, $40, SPRITE_SPEC_VIOLINIST_2, $00, $06
+	db $80, $3f, $20, SPRITE_SPEC_GUITARIST_1, $00, $06
+	db $80, $3f, $30, SPRITE_SPEC_DOUBLE_BASS_1, $00, $06
+	db $80, $77, $20, SPRITE_SPEC_BELLY_DRUM_1, $00, $06
+	db $80, $87, $48, SPRITE_SPEC_COUPLE_1, $00, $06
+	db $80, $87, $58, SPRITE_SPEC_CLAPPER_1, $00, $06
+	db $80, $67, $4d, SPRITE_SPEC_JUMPER_1, $00, $06
+	db $80, $67, $5d, SPRITE_SPEC_KICKER_1, $00, $06
+	db $80, $8f, $88, SPRITE_SPEC_SWORDSMAN_1, $00, $06
+	db $80, $8f, $98, SPRITE_SPEC_SWORDSMAN_2, $00, $06
 
 
 SpriteSpecStruct_ShuttleAndGas:
 	db $00, $5f, $57, SPRITE_SPEC_SHUTTLE, $00, $00
-	db $80, $80, $50, SPRITE_SPEC_SMALL_LIFTOFF_GAS, $00, $00
-	db $80, $80, $60, SPRITE_SPEC_SMALL_LIFTOFF_GAS, $00, $20
+	db $80, $80, $50, SPRITE_SPEC_SMALL_LIFTOFF_GAS, $00, $03
+	db $80, $80, $60, SPRITE_SPEC_SMALL_LIFTOFF_GAS, $00, $23
 	
 	
 SpriteSpecStruct_RocketAndGas:
 	db $00, $6f, $57, SPRITE_SPEC_BIG_ROCKET, $00, $00
-	db $80, $80, $55, SPRITE_SPEC_SMALL_LIFTOFF_GAS, $00, $00
-	db $80, $80, $5b, SPRITE_SPEC_SMALL_LIFTOFF_GAS, $00, $20
+	db $80, $80, $55, SPRITE_SPEC_SMALL_LIFTOFF_GAS, $00, $03
+	db $80, $80, $5b, SPRITE_SPEC_SMALL_LIFTOFF_GAS, $00, $23
 	
 	
 FillScreen0FromHLdownWithEmptyTile:
@@ -171,7 +171,7 @@ FillScreenFromHLdownWithEmptyTile:
 	ret                                                             ; $27a3
 
 
-CopyHLtoDE_BCbytes:
+CopyHLtoDE_BCbytes::
 .loop:
 	ld   a, [hl+]                                                   ; $27a4
 	ld   [de], a                                                    ; $27a5
@@ -182,6 +182,19 @@ CopyHLtoDE_BCbytes:
 	jr   nz, .loop                                                  ; $27aa
 
 	ret                                                             ; $27ac
+
+CopyAtoDE_BCbytes::
+.loop:                                                   ; $27a4
+		ld   [de], a                                                    ; $27a5
+		inc  de                                                         ; $27a6
+		dec  bc     
+		ld h, a                                                    ; $27a7
+		ld   a, b                                                       ; $27a8
+		or   c    
+		ld a, h                                                      ; $27a9
+		jr   nz, .loop                                                  ; $27aa
+	
+		ret
 
 
 LoadAsciiAndMenuScreenGfx:
@@ -291,19 +304,19 @@ CopyLayoutBrowsToHL:
 
 	; in: DE - source addr
 CopyAttrToScreen0::
-	ld a, 1
-	ld [rVBK], a
 	ld   hl, _SCRN0                                                 ; $27eb
 
 ; in: DE - source addr
 ; in: HL - vram dest addr
-CopyAttrToHL:
+CopyAttrToHL::
 	ld   b, SCREEN_TILE_HEIGHT                                      ; $27ee
 
 ; in: B - number of rows to copy to
 ; in: DE - source addr
 ; in: HL - vram dest addr
-CopyAttrBrowsToHL:
+CopyAttrBrowsToHL::
+	ld a, 1
+	ld [rVBK], a
 .loopRow:
 ; push current start vram addr
 	push hl                                                         ; $27f0
@@ -313,7 +326,7 @@ CopyAttrBrowsToHL:
 	ld   a, [de]                                                    ; $27f3
 	ld   [hl+], a                                                   ; $27f4      
 	inc  de     
-	inc de                                              ; $27f5
+	inc  de                                              ; $27f5
 	dec  c                                                          ; $27f6
 	jr   nz, .loopCol                                               ; $27f7
 
@@ -379,6 +392,7 @@ CopyPalettesToCram::
 	ldi [hl], a
 .loadPaletteLoop
 	ld a, [de]
+	call WaitVRAM
 	ld [hl], a
 	inc de
 	dec c
@@ -952,7 +966,13 @@ ConvertFromBgTileToObjectTile:
 	ld a, [hGameState]
 	cp a, $0
 	jr z, .isInGame
+	cp a, $0A
+	jr z, .isInGame
+	cp a, $18
+	jr z, .isInGame
 	cp a, $1A
+	jr z, .isInGame
+	cp a, $1c
 	ld a, b
 	ret nz
 .isInGame

@@ -1,5 +1,18 @@
 
 GameState24_CopyrightDisplay::
+; check for RTC
+    ld a, [sPlaceholder]
+	ld c, a
+	ld a, 09
+	ld [rRAMB], a
+	ld a, [_SRAM]
+	ld b, a
+	ld a, c
+	ld [_SRAM], a
+	xor a
+	ld [rRAMB], a
+	ld a, b
+	ld [sRTCAvailable], a
 ; switch to bank 1 for graphics data	
 	ld a, BANK_GRAPHICS_AND_LAYOUTS
 	ld [rROMB0], a
@@ -138,6 +151,9 @@ GameState06_TitleScreenInit::
 
 ; set display and oam
 ; set correct bank based on time
+    ld a, [sRTCAvailable]
+	and a
+	jr z, .noRTCLayout
     ld a, [sIsDay_DuskDawn_Night]
 	inc a
 	ld [rROMB0], a
@@ -151,7 +167,12 @@ GameState06_TitleScreenInit::
 	ld   de, Layout_TitleScreen_Sunrise_Sunset
 	jr .copy
 .night 
-	ld   de, Layout_TitleScreen_Night    
+	ld   de, Layout_TitleScreen_Night
+	jr .copy
+.noRTCLayout
+	ld a, 3
+	ld [rROMB0], a
+	ld   de, Layout_TitleScreen_NoRTC    
 .copy                     ; $03ed
 	call CopyLayoutAndAttrToScreen0        
 	ld a, BANK_DEMO_AND_NIGHT_GRAPHICS
@@ -502,6 +523,14 @@ GameState07_TitleScreenMain:
 	ld [hIsOptionMenu], a
 	ld a, $08
 	ld   [wOam+OAM_X], a  
+	;check for RTC
+	ld a, [sRTCAvailable]
+	and a
+	jr nz, .cursorPos
+.noRTC
+	ld a, 1
+	ld [hSelectedOption], a
+.cursorPos
 ; set cursor Y based on selected option
     ld a, [hSelectedOption]
     cp   a, $00
@@ -530,6 +559,12 @@ GameState07_TitleScreenMain:
 	bit PADB_DOWN, b
     jp nz, .pressedDownOptions
 
+	bit PADB_RIGHT, b
+	jp nz, .pressedDownOptions
+
+	bit PADB_LEFT, b
+	jp nz, .pressedUpOptions
+
 	bit PADB_UP, b
 	jp nz, .pressedUpOptions
 
@@ -539,56 +574,21 @@ GameState07_TitleScreenMain:
 	bit PADB_A, b
 	jp nz, .pressedAOptions
     push bc
-.updateClock::
-	ld hl, $9b81
-	xor a
-	ld [$6000], a
-	inc a
-	ld [$6000], a
-	ld a, $0A
-	ld [$4000], a
-	ld a, [$a000]
-	ld b, a
-;	call ConvertHexToDec
-	ld b, -1
-	.loopa
-	inc b
-	sub 10
-	jr nc, .loopa
-	add a, 10
-	ld c, a
-	ld a, b
-	ldi [hl], a
-	ld a, c
-	ldi [hl], a
-	ld a, ":"
-	ldi [hl], a
-	xor a
-	ld [$6000], a
-	inc a
-	ld [$6000], a
-	ld a, $09
-	ld [$4000], a
-	ld a, [$a000]
-	ld b, a
-;	call ConvertHexToDec
-	ld b, -1
-	.loopb
-	inc b
-	sub 10
-	jr nc, .loopb
-	add a, 10
-	ld c, a
-	ld a, b
-	ldi [hl], a
-	ld a, c
-	ldi [hl], a
-	ld a, $0
-	ld [$4000], a
+    ld hl, $9b81
+	call UpdateClock
 
 .updateToggledOptions
 	xor a, a
+	ld [rRAMB], a
 	ld c, 3
+	ld b, a
+	ld a, [sRTCAvailable]
+	and a
+	ld a, b
+	jr nz, .updateLoop
+.noRTCOptionToggle
+	ld a, 1
+	ld c, 1
 .updateLoop
 	push af
 	push bc
@@ -613,14 +613,26 @@ GameState07_TitleScreenMain:
 	ret z
 .pressedDownOptions
 	ld hl, hSelectedOption
+	;check for RTC
+	ld a, [sRTCAvailable]
+	and a
+	jr z, .noRTCDown
 ; if already at the last option, return
 	ld a, [hl]
 	cp a, 3
 	ret z
 	inc [hl]
+	jr .returnDown
+.noRTCDown
+	ret
+.returnDown
 	ret 
 
 .pressedUpOptions
+	;check for RTC
+	ld a, [sRTCAvailable]
+	and a
+	jr z, .pressedBOptions
 ; if already at the first option, go back
 	ld hl, hSelectedOption
 	ld a, [hl]

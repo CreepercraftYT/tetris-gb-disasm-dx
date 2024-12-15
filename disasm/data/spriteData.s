@@ -824,11 +824,11 @@ SpriteTiles_5b:
 
 SpriteTiles_5c:
 	dw SpriteCoords_5c
-	db $41, $2f, $2f, $ff
+	db $41, $da, $da, $ff
 
 SpriteTiles_5d:
 	dw SpriteCoords_5d
-	db $52, $2f, $62, $ff
+	db $52, $da, $62, $ff
 
 SpriteCoords_00:
 SpriteCoords_01:

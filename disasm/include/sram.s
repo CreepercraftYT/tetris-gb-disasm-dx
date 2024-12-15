@@ -47,3 +47,10 @@ sIsSRAMInitialized::
 sSkipBg::
     ds 1
 .end
+
+sRTCAvailable::
+    ds 1
+.end
+sPlaceholder::
+    ds 1
+.end

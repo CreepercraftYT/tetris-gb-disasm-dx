@@ -107,6 +107,9 @@ Palettes_BoardBackgroundTransition::
 Attributes_TitleScreen::
 	incbin "data/palmap_titleScreen.bin"
 
+Layout_TitleScreen_NoRTC::
+	incbin "data/layout_titleScreen_noRTC.bin"
+
 Attributes_GameMusicTypeScreen::
 	incbin "data/palmap_gameMusicTypeScreen.bin"
 
@@ -134,18 +137,10 @@ Layout_DMG::
 Palettes_BType::
 	incbin "data/palettes_bType.bin"
 
-IsDMG::
-	ld a, 1 
-	ld [rROMB0], a
-	call CopyAsciiAndTitleScreenTileData
-	ld a, 3
-	ld [rROMB0], a
-	ld de, Layout_DMG
-	call CopyLayoutToScreen0
-	ld a, %11100100
-	ld [rBGP], a 
-	jr IsDMG
-.end
+Palettes_2P::
+	incbin "data/palettes_2P.bin"
+
+
 BoardBackgroundColorTransition::
 	; Return if not in the correct state
 	ld a, [wBoardBackgroundColorTransitionState]
@@ -219,5 +214,164 @@ BoardBackgroundColorTransition::
 	ld [wBoardBackgroundColorTransitionState], a
 	ld [wTransitionTimer], a
 	ld [wTransitionTimer+1], a
+	ret
+
+	Gfx_GridAnimation::
+	INCBIN "build/gridAnimation.2bpp"
+
+AnimateGrid::
+	; Return if game paused
+	ld a, [hGamePaused]
+	and a
+	ret nz
+	; Return if wrong Game State
+	ld a, [hGameState]
+	cp a, $1A
+	jr z, .continue
+	and a
+	ret nz
+.continue
+	; are we already doing the transition?
+	ld a, [wUpdateTimer]
+	and a
+	jr nz, .skipTimerSet
+	; set the timer
+	ld a, 15
+	ld [wUpdateTimer], a
+	xor a
+	ld [wUpdateTimer+1], a
+.skipTimerSet
+	; get the correct color offset
+	ld hl, Gfx_GridAnimation
+.updateGrid
+	ld a, [wUpdateTimer+1]
+	ld d, 0
+	ld e, a
+	add hl, de
+	ld de, _VRAM+$330
+	ld bc, 32
+	call CopyHLtoDE_BCbytes
+	ld hl, wUpdateTimer
+	dec [hl]
+	ld a, [hl]
+	and a
+	jp z, .doneWaiting
+	ret
+.doneWaiting
+    ld a, 15
+	ld [wUpdateTimer], a
+	ld a, [wUpdateTimer+1]
+	add a, 32
+	ld [wUpdateTimer+1], a
+	cp a, 128
+	jr z, .doneLoop
+	ret
+.doneLoop
+	xor a
+	ld [wUpdateTimer], a
+	ld [wUpdateTimer+1], a
+	ret
+
+CheckIfOtherPlayerCleared2PlusLines2::
+    ldh  a, [hOtherPlayersMultiplierToProcess]                   ; $0c8c
+    and  a                                                       ; $0c8e
+    jr   z, .checkIfMultiplierToProcess                          ; $0c8f
+
+; if multiplier to process, and exec'd function to play next piece, jump
+    bit  7, a                                                    ; $0c91
+    ret  z                                                       ; $0c93
+
+    and  $07                                                     ; $0c94
+    jr   .multiplierToProcessAfterPlayingPiece                  ; $0c96
+
+.checkIfMultiplierToProcess:
+; continue if other player cleared 2+ lines
+    ldh  a, [h2toThePowerOf_OtherPlayersLinesClearedMinus1]      ; $0c98
+    and  a                                                       ; $0c9a
+    ret  z                                                       ; $0c9b
+
+; store the multiplier once, dont do anything until after a piece is played
+    ldh  [hOtherPlayersMultiplierToProcess], a                   ; $0c9c
+    xor  a                                                       ; $0c9e
+    ldh  [h2toThePowerOf_OtherPlayersLinesClearedMinus1], a      ; $0c9f
+    ret                                                          ; $0ca1
+
+.multiplierToProcessAfterPlayingPiece:
+; 1, 2 or 4 in C
+    ld   c, a                                                    ; $0ca2
+    push bc                                                      ; $0ca3
+
+; get starting row, the higher the other player's multiplier,
+; the higher we're shifting rows
+    ld   hl, sGameScreenBufferAttr+$22                               ; $0ca4
+    ld   de, -GB_TILE_WIDTH                                      ; $0ca7
+
+.getStartingRow:
+    add  hl, de                                                  ; $0caa
+    dec  c                                                       ; $0cab
+    jr   nz, .getStartingRow                                     ; $0cac
+
+; hl is high up, de is top of screen
+    ld   de, sGameScreenBufferAttr+$22                               ; $0cae
+    ld   c, GAME_SCREEN_ROWS-1                                   ; $0cb1
+
+; copy rows upwards
+.copyNextRow:
+    ld   b, GAME_SQUARE_WIDTH                                    ; $0cb3
+
+.copyNextCol:
+    ld   a, [de]                                                 ; $0cb5
+    ld   [hl+], a                                                ; $0cb6
+    inc  e                                                       ; $0cb7
+    dec  b                                                       ; $0cb8
+    jr   nz, .copyNextCol                                        ; $0cb9
+
+; hl to next row
+    push de                                                      ; $0cbb
+    ld   de, GB_TILE_WIDTH-GAME_SQUARE_WIDTH                     ; $0cbc
+    add  hl, de                                                  ; $0cbf
+    pop  de                                                      ; $0cc0
+
+; de to next row
+    push hl                                                      ; $0cc1
+    ld   hl, GB_TILE_WIDTH-GAME_SQUARE_WIDTH                     ; $0cc2
+    add  hl, de                                                  ; $0cc5
+    push hl                                                      ; $0cc6
+    pop  de                                                      ; $0cc7
+    pop  hl                                                      ; $0cc8
+
+    dec  c                                                       ; $0cc9
+    jr   nz, .copyNextRow                                        ; $0cca
+
+    
+
+; C is multiplier, hl now bottom of high-related blocks
+    pop  bc                                                      ; $0ccc
+
+; copy dark solid blocks underneath our loaded high-related blocks
+.copyDarkSolidRow:
+    ld   de, wDarkSolidBlocksUnderRandomBlocks                   ; $0ccd
+    ld   b, GAME_SQUARE_WIDTH                                    ; $0cd0
+
+.copyDarkSolidCol:
+    ld   a, [de]     
+	cp a, $28
+	jr nz, .no 
+	ld a, 4
+	jr .do
+.no
+	ld a, 3  
+.do                                          ; $0cd2
+    ld   [hl+], a                                                ; $0cd3
+    inc  de                                                      ; $0cd4
+    dec  b                                                       ; $0cd5
+    jr   nz, .copyDarkSolidCol                                   ; $0cd6
+
+    push de                                                      ; $0cd8
+    ld   de, GB_TILE_WIDTH-GAME_SQUARE_WIDTH                     ; $0cd9
+    add  hl, de                                                  ; $0cdc
+    pop  de                                                      ; $0cdd
+    dec  c                                                       ; $0cde
+    jr   nz, .copyDarkSolidRow                                   ; $0cdf
 	ret
 SECTION "Rosy Retrospection Data", ROMX, BANK[$4]

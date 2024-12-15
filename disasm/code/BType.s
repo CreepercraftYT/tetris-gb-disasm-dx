@@ -154,11 +154,22 @@ GameState22_DancersInit:
 ; change the rom bank first!
 	ld a, BANK_GRAPHICS_AND_LAYOUTS
 	ld [rROMB0], a
-    ld   hl, wGameScreenBuffer+2                                 ; $1dd2
-    ld   de, GameScreenLayout_Dancers                            ; $1dd5
+    ld   hl, wGameScreenBuffer+2      
+    ld a, [sIsDay_DuskDawn_Night]
+    cp a, 2                           ; $1dd2
+    ld   de, GameScreenLayout_Dancers  
+    push de
+    jr nz, .copy
+.night
+    ld a, BANK_DEMO_AND_NIGHT_GRAPHICS
+	ld [rROMB0], a
+    ld   de, GameScreenLayout_Dancers_Night
+    push de
+.copy                          ; $1dd5
     call CopyToGameScreenUntilByteReadEquFFhThenSetVramTransfer
     ld   hl, sGameScreenBufferAttr+2                                 ; $1dd2
-    ld   de, GameScreenLayout_Dancers+1                            ; $1dd5
+    pop de
+    inc de                           ; $1dd5
     call CopyToGameScreenUntilByteReadEquFFhThenSetVramTransfer
     ld a, 3
 	ld [rROMB0], a   ; $1dd8

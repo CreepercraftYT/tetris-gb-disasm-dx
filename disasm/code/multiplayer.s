@@ -189,12 +189,20 @@ GameState16_MarioLuigiScreenInit:
     call TurnOffLCD                                              ; $0696
     call LoadAsciiAndMenuScreenGfx                               ; $0699
     ld   de, Layout_MarioLuigiScreen                             ; $069c
-    call CopyLayoutToScreen0                                     ; $069f
+    call CopyLayoutAndAttrToScreen0
+    ld a, 3
+    ld [rROMB0], a
+    ld de, Palettes_2P
+    call LoadTimeBasedPalettes   
+    ld a, 1
+    ld [rROMB0], a                                  ; $069f
 
 ; clear oam and fill game screen with empty tiles
     call Clear_wOam                                              ; $06a2
     ld   a, TILE_FLASHING_PIECE+1                                           ; $06a5
-    call FillGameScreenBufferWithTileA                           ; $06a7
+    call FillGameScreenBufferWithTileA   
+    ld a, 3
+    call FillGameScreenBuffer2WithPaletteAandSetToVramTransfer                        ; $06a7
 
 ; have master transfer in vblank, then clear some vars
     ld   a, $03                                                  ; $06aa
@@ -260,14 +268,14 @@ GameState16_MarioLuigiScreenInit:
     ret                                                          ; $0704
 
 .marioLuigiHeads:
-    db $40, $28, $ae, $00
-    db $40, $30, $ae, $20
-    db $48, $28, $af, $00
-    db $48, $30, $af, $20
-    db $78, $28, $c0, $00
-    db $78, $30, $c0, $20
-    db $80, $28, $c1, $00
-    db $80, $30, $c1, $20
+    db $40, $28, $ae, $06
+    db $40, $30, $ae, $26
+    db $48, $28, $af, $06
+    db $48, $30, $af, $26
+    db $78, $28, $c0, $07
+    db $78, $30, $c0, $27
+    db $80, $28, $c1, $07
+    db $80, $30, $c1, $27
     
     
 CopyDEtoHL_Bbytes:
@@ -522,6 +530,9 @@ GameState18_2PlayerInGameInit:
     call Clear_wOam                                              ; $084e
 
 ; load layout to screen 0
+    ld a, BANK_GRAPHICS_AND_LAYOUTS
+    ; just to make sure...
+	ld [rROMB0], a
     ld   de, Layout_2PlayerInGame                                ; $0851
     push de                                                      ; $0854
 
@@ -529,52 +540,51 @@ GameState18_2PlayerInGameInit:
     ld   a, $01                                                  ; $0855
     ldh  [hATypeLinesThresholdToPassForNextLevel], a             ; $0857
     ldh  [hIs2Player], a                                         ; $0859
-    call CopyLayoutToScreen0                                     ; $085b
+    call CopyLayoutAndAttrToScreen0                                     ; $085b
 
 ; also copy layout to screen 1
     pop  de                                                      ; $085e
     ld   hl, _SCRN1                                              ; $085f
-    call CopyLayoutToHL                                          ; $0862
+    call CopyLayoutAndAttrToHL                                          ; $0862
 	ld a, BANK_DEMO_AND_NIGHT_GRAPHICS
 	ld [rROMB0], a
-	ld hl, 0
-	ld a, [sIsDay_DuskDawn_Night]
-	cp a, 0
-	jr z, .noPalAdjA
-	ld hl, 128
-.adjLoopA
-	dec a
-	jr z, .noPalAdjA
-	add hl, hl
-	jr .adjLoopA
-.noPalAdjA
+    ld a, [sOptionColors]
+	cp a, 1
+	jr z, .segaColors
 	ld de, Palettes_InGameGuideline
-	add hl, de
-	ld d, h
-	ld e, l
-	ld hl, rBCPS
-	ld b, $80
-	ld c, 64
-	call CopyPalettesToCram    
-	ld hl, 0
+	jr .loadPalettes
+.segaColors
+	ld de, Palettes_InGameSega
+.loadPalettes
+	xor a
+	ld [sSkipBg], a
+	push de
+    call LoadTimeBasedPalettes
+	ld a, [sOptionLights]
+	and a
+	jp z, .continue
 	ld a, [sIsDay_DuskDawn_Night]
-	cp a, 0
-	jr z, .noPalAdjB   
-	ld hl, 128
-.adjLoopB
-	dec a
-	jr z, .noPalAdjB
-	add hl, hl
-	jr .adjLoopB
-.noPalAdjB
-	ld de, Palettes_InGameGuideline+64
+	cp a, 2
+	jp nz, .continue
+	pop de 
+	ld c, 40
+	ld b, $80
+	ld hl, rBCPS
+	push de
+	call CopyPalettesToCram
+	pop de
+	ld hl, 64
 	add hl, de
 	ld d, h
 	ld e, l
-	ld hl, rOCPS
+	ld c, 48
 	ld b, $80
-	ld c, 64
-	call CopyPalettesToCram   
+	ld hl, rOCPS
+	call CopyPalettesToCram
+	jr .skipPop
+.continue
+	pop de
+.skipPop
 	ld a, BANK_GRAPHICS_AND_LAYOUTS
 	ld [rROMB0], a  
 ; copy pause screen layout to screen 1
@@ -648,16 +658,16 @@ GameState18_2PlayerInGameInit:
     ret                                                          ; $08c3
 
 .luigiFace:
-    db $18, $84, $c0, $00
-    db $18, $8c, $c0, $20
-    db $20, $84, $c1, $00
-    db $20, $8c, $c1, $20
+    db $18, $84, $c0, $07
+    db $18, $8c, $c0, $27
+    db $20, $84, $c1, $07
+    db $20, $8c, $c1, $27
 
 .marioFace:
-    db $18, $84, $ae, $00
-    db $18, $8c, $ae, $20
-    db $20, $84, $af, $00
-    db $20, $8c, $af, $20
+    db $18, $84, $ae, $06
+    db $18, $8c, $ae, $26
+    db $20, $84, $af, $06
+    db $20, $8c, $af, $26
     
     
 GameState19_2PlayerSyncHighBlocksAndPieces:
@@ -890,10 +900,36 @@ GameState19_commonEnd:
 .afterPassiveCheck:
 ; load in active piece and next piece
     ld   hl, wDemoOrMultiplayerPieces                            ; $09e4
-    ld   a, [hl+]                                                ; $09e7
-    ld   [wSpriteSpecs+SPR_SPEC_SpecIdx], a                      ; $09e8
-    ld   a, [hl+]                                                ; $09eb
-    ld   [wSpriteSpecs+SPR_SPEC_SIZEOF+SPR_SPEC_SpecIdx], a      ; $09ec
+    ld   a, [hl+]                
+    ld   [wSpriteSpecs+SPR_SPEC_SpecIdx], a
+    push hl                                   ; $2016
+    sra a
+    sra a
+    push af
+    ld a, 2
+    ld [rROMB0], a
+    pop af
+    ld hl, PieceColorLookUpTable
+    add a, l
+    ld l, a
+    ld a, [hl]
+; Color
+    pop hl                                     ; $09e7
+    ld   [wSpriteSpecs+SPR_SPEC_SpecIdx+1], a                      ; $09e8
+    ld   a, [hl+]     
+    ld   [wSpriteSpecs+SPR_SPEC_SIZEOF+SPR_SPEC_SpecIdx], a                                     
+    push hl                                   ; $2016
+    sra a
+    sra a
+    ld hl, PieceColorLookUpTable
+    add a, l
+    ld l, a
+    ld a, [hl]
+; Color
+    pop hl       ; $09eb
+    ld   [wSpriteSpecs+SPR_SPEC_SIZEOF+SPR_SPEC_SpecIdx+1], a 
+    ld a, 3
+    ld [rROMB0], a
 
 ; store address of next piece
     ld   a, h                                                    ; $09ef
@@ -1601,6 +1637,8 @@ CheckIfOtherPlayerCleared2PlusLines:
     dec  c                                                       ; $0cc9
     jr   nz, .copyNextRow                                        ; $0cca
 
+    
+
 ; C is multiplier, hl now bottom of high-related blocks
     pop  bc                                                      ; $0ccc
 
@@ -1622,6 +1660,12 @@ CheckIfOtherPlayerCleared2PlusLines:
     pop  de                                                      ; $0cdd
     dec  c                                                       ; $0cde
     jr   nz, .copyDarkSolidRow                                   ; $0cdf
+
+    ld a, 3
+    ld [rROMB0], a
+    call CheckIfOtherPlayerCleared2PlusLines2
+    ld a, 2
+    ld [rROMB0], a
 
 ; copy rows to vram
     ld   a, ROWS_SHIFTING_DOWN_ROW_START                         ; $0ce1
@@ -2216,34 +2260,47 @@ ClearPushStartText:
 
 
 LoadWinnerLoserScreen:
-; switch to bank 1 for graphics data	
-	ld a, BANK_GRAPHICS_AND_LAYOUTS
-	ld [rROMB0], a
 
 ; load gfx with LCD off
-    call TurnOffLCD                                              ; $0f6f
+    call TurnOffLCD          
+    ; switch to bank 1 for graphics data	
+	ld a, BANK_GRAPHICS_AND_LAYOUTS
+	ld [rROMB0], a                                    ; $0f6f
     ld   hl, Gfx_RocketScene                                     ; $0f72
     ld   bc, Gfx_RocketScene.end-Gfx_RocketScene+$300            ; $0f75
     call CopyHLtoVramBCbytes                                     ; $0f78
-    call FillScreen0FromHLdownWithEmptyTile                      ; $0f7b
-
+    call FillScreen0FromHLdownWithEmptyTile  
+    ld a, 1
+    ld [rVBK], a                    ; $0f7b
+    inc a
+    ld de, _SCRN0+$80
+    ld bc, $A0
+    call CopyAtoDE_BCbytes
+    xor a
+    ld [rVBK], a
 ; display mario and luigi score screen
     ld   hl, _SCRN0                                              ; $0f7e
     ld   de, Layout_MarioScore                                   ; $0f81
     ld   b, $04                                                  ; $0f84
-    call CopyLayoutBrowsToHL                                     ; $0f86
+    call CopyLayoutAndAttrBrowsToHL                                     ; $0f86
 
 ; Layout_BricksAndLuigiScore
     ld   hl, _SCRN0+$180                                         ; $0f89
     ld   b, $06                                                  ; $0f8c
-    call CopyLayoutBrowsToHL                                     ; $0f8e
+    call CopyLayoutAndAttrBrowsToHL 
+    ld a, 3
+    ld [rROMB0], a
+    ld de, Palettes_2P
+    call LoadTimeBasedPalettes 
+    ld a, 1
+    ld [rROMB0], a                                   ; $0f8e
 
 ; for master, layout is fine now
     ldh  a, [hMultiplayerPlayerRole]                             ; $0f91
     cp   MP_ROLE_MASTER                                          ; $0f93
     jr   nz, .afterBGdisplay                                     ; $0f95
 
-; is passive - swap mario/luigi text display
+; is passive - swap mario/luigi text display, the colors too
     ld   hl, _SCRN0+$41                                          ; $0f97
     ld   [hl], "L"                                               ; $0f9a
     inc  l                                                       ; $0f9c
@@ -2265,6 +2322,17 @@ LoadWinnerLoserScreen:
     ld   [hl], "I"                                               ; $0fb4
     inc  l                                                       ; $0fb6
     ld   [hl], "O"                                               ; $0fb7
+
+    ld de, Layout_BricksAndLuigiScore+$50
+    ld b, 4
+    ld   hl, _SCRN0
+    call CopyAttrBrowsToHL
+    ld de, Layout_MarioScore
+    ld   hl, _SCRN0+$1c0
+    ld b, 4
+    call CopyAttrBrowsToHL
+
+
 
 .afterBGdisplay:
 ; process deuce and advantage logic if not a tie
@@ -2666,3 +2734,6 @@ ReturnFromCallersContextUntilBothPlayersCommunicatingBC:
     ldh  [hNextSerialByteToLoad], a                              ; $1163
     pop  hl                                                      ; $1165
     ret                                                          ; $1166
+
+_2PlayerUnpauseTiles::
+    db $34, $33, $34, $33, $34

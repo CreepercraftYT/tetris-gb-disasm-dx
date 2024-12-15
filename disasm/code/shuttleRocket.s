@@ -222,6 +222,9 @@ GameState03_ShuttleSceneShootFire:
     ldh  a, [hTimer1]                                            ; $127b
     and  a                                                       ; $127d
     jr   nz, .checkTimer2                                        ; $127e
+    ld hl, wSpriteSpecs+$15
+    ld a, 4
+    ld [hl], a
 
 ; every 10 frames, move rocket up
     ld   a, $0a                                                  ; $1280
@@ -337,8 +340,6 @@ GameState2c_ShuttleSceneShowCongratulations:
 
 
 GameState2d_CongratsWaitingBeforeBTypeScore:
-    xor a
-    ld [sIsRocketScene], a
 ; switch to bank 1 for graphics data	
 	ld a, BANK_GRAPHICS_AND_LAYOUTS
 	ld [rROMB0], a
@@ -358,6 +359,8 @@ GameState2d_CongratsWaitingBeforeBTypeScore:
     ldh  [rLCDC], a                                              ; $1314
     ld   a, GS_B_TYPE_LEVEL_FINISHED                             ; $1316
     ldh  [hGameState], a                                         ; $1318
+    xor a
+    ld [sIsRocketScene], a
     ret                                                          ; $131a
 
 
@@ -498,7 +501,10 @@ GameState31_RocketSceneLiftOff:
 GameState32_RocketSceneShootFire:
     ldh  a, [hTimer1]                                            ; $13b5
     and  a                                                       ; $13b7
-    jr   nz, .checkTimer2                                        ; $13b8
+    jr   nz, .checkTimer2     
+    ld hl, wSpriteSpecs+$15
+    ld a, 4
+    ld [hl], a                                   ; $13b8
 
 ; every 10 frames, decrease thruster and rocket Y
     ld   a, $0a                                                  ; $13ba
