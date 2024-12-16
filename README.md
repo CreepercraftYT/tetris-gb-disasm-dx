@@ -47,11 +47,14 @@ Hard Mode ("Heart" mode) is now enabled by holding Up on the title screen
 * `Bank 2`
   * Song Data
   * Sunrise/Sunset Layouts
+  * some functions
   * `Leftover space - $2e05 (11787) bytes`
 * `Bank 3`
   * Demo Mode button inputs
   * Demo mode piece selections
   * Night Layouts
+  * some functions
+  * palettes
   * `Leftover space - $3e50 (15952) bytes`
 
 `Total space added - $8027 (32807) bytes`
