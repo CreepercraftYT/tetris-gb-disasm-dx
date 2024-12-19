@@ -984,7 +984,7 @@ GameState19_passive:
 
 .nextCol:
 ; ping master 0s at this time
-    lda SB_PASSIVE_PING_LOADING_HIGH_BLOCKS                      ; $0a26
+    ld a, SB_PASSIVE_PING_LOADING_HIGH_BLOCKS                      ; $0a26
     ldh  [hSerialInterruptHandled], a                            ; $0a27
     ldh  [rSB], a                                                ; $0a29
     ld   a, SC_REQUEST_TRANSFER|SC_PASSIVE                       ; $0a2b
@@ -1724,7 +1724,7 @@ GameState1b_2PlayerGameEnd:
     call ReturnFromCallersContextUntilBothPlayersCommunicatingBC ; $0d17
 
 ; no shifting down state
-    lda ROWS_SHIFTING_DOWN_NONE                                  ; $0d1a
+    ld a, ROWS_SHIFTING_DOWN_NONE                                  ; $0d1a
     ldh  [hRowsShiftingDownState], a                             ; $0d1b
 
 ; go to loser state if we lost, winner if we won

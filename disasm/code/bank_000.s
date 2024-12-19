@@ -329,7 +329,11 @@ VBlankInterruptHandler:
 	call CopyRamBufferRow14ToVram                                   ; $01c6
 	call CopyRamBufferRow15ToVram                                   ; $01c9
 	call CopyRamBufferRow16ToVram                                   ; $01cc
-	call CopyRamBufferRow17ToVram                                   ; $01cf
+	call CopyRamBufferRow17ToVram
+	call CopyRamBufferRow18ToVram
+	call CopyRamBufferRow19ToVram
+	call CopyRamBufferRow20ToVram
+	call CopyRamBufferRow21ToVram                                    ; $01cf
 	call ProcessScoreUpdatesAfterBTypeLevelDone                     ; $01d2
 	call hOamDmaFunction                                            ; $01d5
 	call DisplayHighScoresAndNamesForLevel  
@@ -337,8 +341,7 @@ VBlankInterruptHandler:
 	ld [rROMB0], a
 	call AnimateGrid 
 	call BoardBackgroundColorTransition  
-	ld hl, $980f                     ; $01d8
-	call UpdateClock
+	
 
 ; if just added drops to score..
 	ld   a, [wATypeJustAddedDropsToScore]                           ; $01db
@@ -583,6 +586,8 @@ Reset:
 
 MainLoop:
 ; main game loop updates
+    ld hl, $980f                     ; $01d8
+	call UpdateClock
 	call PollInput                                                  ; $02c4
 	call ProcessGameState                                           ; $02c7
 	call ThunkUpdateSound                                           ; $02ca
@@ -1751,7 +1756,7 @@ GameState0d_GameOverScreenClearing:
 	call CopyGameScreenInnerText                                    ; $1f44
 
 ; please try again text
-	ld   hl, wGameScreenBuffer+$183                                 ; $1f47
+	ld   hl, wGameScreenBuffer+$183                                ; $1f47
 	ld   de, GameInnerScreen_TryAgain                               ; $1f4a
 	ld   c, $06                                                     ; $1f4d
 	call CopyGameScreenInnerText                                    ; $1f4f
@@ -1916,7 +1921,23 @@ FillGameScreenBufferWithTileA:
 	add  hl, de                                                     ; $1fed
 	dec  c                                                          ; $1fee
 	jr   nz, .nextRow                                               ; $1fef
+    
+	ld c, 4
+	ld hl, wGameScreenBuffer.end-$7e
+	ld   de, GB_TILE_WIDTH
+.nextRowExtra:
+	push hl                                                         ; $1fe5
+	ld   b, GAME_SQUARE_WIDTH                                       ; $1fe6
 
+.nextColExtra:
+	ld   [hl+], a                                                   ; $1fe8
+	dec  b                                                          ; $1fe9
+	jr   nz, .nextColExtra                                               ; $1fea
+
+	pop  hl                                                         ; $1fec
+	add  hl, de                                                     ; $1fed
+	dec  c                                                          ; $1fee
+	jr   nz, .nextRowExtra                                               ; $1fef
 	ret                                                             ; $1ff1
 FillGameScreenBuffer2WithPaletteAandSetToVramTransfer:
 	; start to fill rows going down with tile A
@@ -1942,7 +1963,25 @@ FillGameScreenBuffer2WithPaletteA:
 	pop  hl                                                         ; $1fec
 	add  hl, de                                                     ; $1fed
 	dec  c                                                          ; $1fee
-	jr   nz, .nextRow                                               ; $1fef
+	jr   nz, .nextRow
+
+	ld c, 4
+	ld hl, sGameScreenBufferAttr.end-$7e
+	ld   de, GB_TILE_WIDTH
+.nextRowExtra:
+	push hl                                                         ; $1fe5
+	ld   b, GAME_SQUARE_WIDTH                                       ; $1fe6
+
+.nextColExtra:
+	ld   [hl+], a                                                   ; $1fe8
+	dec  b                                                          ; $1fe9
+	jr   nz, .nextColExtra                                               ; $1fea
+
+	pop  hl                                                         ; $1fec
+	add  hl, de                                                     ; $1fed
+	dec  c                                                          ; $1fee
+	jr   nz, .nextRowExtra                                               ; $1fef
+	ret                                              ; $1fef
 	
 	ret    
 
@@ -1952,7 +1991,7 @@ FillBottom2RowsOfTileMapWithEmptyTile:
 	ld   hl, wGameScreenBuffer+$3c2                                 ; $1ff2
 	ld   de, GB_TILE_WIDTH-GAME_SQUARE_WIDTH                        ; $1ff5
 	ld   c, $02                                                     ; $1ff8
-	ld   a, TILE_EMPTY                                              ; $1ffa
+	ld   a, TILE_FLASHING_PIECE+1                                              ; $1ffa
 
 .nextRow:
 	ld   b, GAME_SQUARE_WIDTH                                       ; $1ffc

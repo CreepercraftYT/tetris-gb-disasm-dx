@@ -544,7 +544,7 @@ GetScreen0AddressOfPieceSquare:
 	ld   e, a                                                       ; $29f0
 
 ; get row offset in screen 0
-	ld   hl, _SCRN0                                                 ; $29f1
+	ld   hl, _SCRN0                                                ; $29f1
 	ld   b, $20                                                     ; $29f4
 
 .loop:
@@ -558,7 +558,7 @@ GetScreen0AddressOfPieceSquare:
 	srl  a                                                          ; $29fe
 	srl  a                                                          ; $2a00
 	srl  a                                                          ; $2a02
-	ld   de, $0000                                                  ; $2a04
+	ld   de, $0000                                                 ; $2a04
 	ld   e, a                                                       ; $2a07
 
 ; add onto screen 0
@@ -765,14 +765,29 @@ CopyToShadowOamBasedOnSpriteSpec:
 	ld   a, [hl+]                                                   ; $2ab5
 	ld   [de], a                                                    ; $2ab6
 	inc  de                                                         ; $2ab7
-	dec  b                                                          ; $2ab8
-	jr   nz, .copyLoop1                                             ; $2ab9
+	dec  b                                                     ; $2ab8
+	jr   nz, .copyLoop1                                           ; $2ab9
 
 ; initial double index into SpriteData
 	ldh  a, [hCurrSpriteSpecIdx]                                    ; $2abb
-
+    ld b, a
 ; get double index into sprite data table
-	ld   hl, SpriteData                                             ; $2abd
+    ld   hl, SpriteData
+	ld a, [sOptionRosyRetroMode]
+	cp a, 1
+	jr nz, .continue
+.rosyRetro
+    ld a, [sOptionColors]
+	cp a, 1
+	jr z, .ARS
+	ld a, 4
+	ld [rROMB0], a
+	jr .continue
+.ARS    
+	ld a, 5
+	ld [rROMB0], a
+.continue   
+	ld a, b                                      ; $2abd
 	rlca                                                            ; $2ac0
 	ld   e, a                                                       ; $2ac1
 	ld   d, $00                                                     ; $2ac2
@@ -870,6 +885,17 @@ CopyToShadowOamBasedOnSpriteSpec:
 	sbc  $08                                                        ; $2b13
 
 .setSpriteY:
+;	ld c, a
+;	ld a, [hGameState]
+;	and a
+;	jr z, .posAdjust
+;	cp a, $1a
+;	ld a, c
+;	jr nz, .noPosAdjust
+;.posAdjust
+;	ld a, c
+;	sub a, $20
+;.noPosAdjust 
 	ldh  [hCurrSpriteY], a                                          ; $2b15
 
 ; by default, skip to next y/x offsets, for next sprite

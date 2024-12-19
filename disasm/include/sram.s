@@ -25,6 +25,8 @@ sOptionColors::
     ds 1 
 sOptionDayNightCycle::
     ds 1
+sOptionRosyRetroMode::
+    ds 1
 .end::
 
 sBTypeHighScores:: ; $d000

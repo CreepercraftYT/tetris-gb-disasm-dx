@@ -533,27 +533,32 @@ GameState07_TitleScreenMain:
 .cursorPos
 ; set cursor Y based on selected option
     ld a, [hSelectedOption]
-    cp   a, $00
+    cp   a, OPTION_LIGHTS_ID
     jr nz, :+                                                 ; $04f7
-    ld   a, $28
+    ld   a, OPTION_LIGHTS_Y
     jr   z, .setCursorY                                                    ; $04f8
-:   cp a, $01
+:   cp a, OPTION_COLORS_ID
     jr nz, :+                                                              ; $04fa
-    ld   a, $38
+    ld   a, OPTION_COLORS_Y
     jr   z, .setCursorY
-:   cp a, $02
+:   cp a, OPTION_DAYNIGHT_CYCLE_ID
     jr nz, :+  
-    ld a, $48   
+    ld a, OPTION_DAYNIGHT_CYCLE_Y   
 	jr   z, .setCursorY 
-:   ld a, $70                                                                 ; $04fc
+:   cp a, OPTION_ROSY_RETRO_MODE
+    jr nz, :+
+	ld a, OPTION_ROSY_RETRO_MODE_Y
+	jr   z, .setCursorY 
+:   ld a, OPTION_TIME_Y   
+	                                                             ; $04fc
 
 .setCursorY:
     ld   [wOam+OAM_Y], a                                            ; $04fe  
 	ld hl, hSelectedOption
 	ld a, [hl]
-	cp a, 4
+	cp a, OPTION_HOURS_ID
 	jp z, .hours
-	cp a, 5
+	cp a, OPTION_MINUTES_ID
 	jp z, .minutes
 .checkButtonsPressedOptions
 	bit PADB_DOWN, b
@@ -580,7 +585,7 @@ GameState07_TitleScreenMain:
 .updateToggledOptions
 	xor a, a
 	ld [rRAMB], a
-	ld c, 3
+	ld c, 4
 	ld b, a
 	ld a, [sRTCAvailable]
 	and a
@@ -588,7 +593,7 @@ GameState07_TitleScreenMain:
 	jr nz, .updateLoop
 .noRTCOptionToggle
 	ld a, 1
-	ld c, 1
+	ld c, 2
 .updateLoop
 	push af
 	push bc
@@ -605,6 +610,14 @@ GameState07_TitleScreenMain:
 	call ChangeToggleTile
 	pop bc
 	pop af
+	ld b, a
+	ld a, [sRTCAvailable]
+	and a
+	ld a, b
+	jr nz, .incOnce
+.incTwice
+	inc a
+.incOnce
 	inc a
     dec c
 	jr nz, .updateLoop
@@ -619,11 +632,17 @@ GameState07_TitleScreenMain:
 	jr z, .noRTCDown
 ; if already at the last option, return
 	ld a, [hl]
-	cp a, 3
+	cp a, OPTION_TIME_ID
 	ret z
 	inc [hl]
 	jr .returnDown
 .noRTCDown
+	; if already at the last option, return
+	ld a, [hl]
+	cp a, OPTION_ROSY_RETRO_MODE
+	ret z
+	inc [hl]
+	inc [hl]
 	ret
 .returnDown
 	ret 
@@ -632,12 +651,20 @@ GameState07_TitleScreenMain:
 	;check for RTC
 	ld a, [sRTCAvailable]
 	and a
-	jr z, .pressedBOptions
+	jr z, .noRTCUp
 ; if already at the first option, go back
 	ld hl, hSelectedOption
 	ld a, [hl]
-	cp a, 0
+	cp a, OPTION_LIGHTS_ID
     jr z, .pressedBOptions
+	dec [hl]
+	ret
+.noRTCUp
+	ld hl, hSelectedOption
+	ld a, [hl]
+	cp a, OPTION_COLORS_ID
+    jr z, .pressedBOptions
+	dec [hl]
 	dec [hl]
 	ret 
 
@@ -670,7 +697,7 @@ GameState07_TitleScreenMain:
 ; toggle the option on or off
 	ld hl, hSelectedOption
 	ld a, [hl]
-	cp a, 3
+	cp a, OPTION_TIME_ID
     jr z, .setTime
 	ld h, HIGH(sOptionLights)
 	ld b, LOW(sOptionLights)
@@ -692,7 +719,7 @@ GameState07_TitleScreenMain:
 	ld a, $0A
 	ld [$0000], a
 .hours
-	ld a, 4
+	ld a, OPTION_HOURS_ID
 	ld [hSelectedOption], a
 ; Access Hour Register
     xor a
@@ -767,7 +794,7 @@ GameState07_TitleScreenMain:
 ;    jp .hours
 	ret 
 .minutes
-	ld a, 5
+	ld a, OPTION_MINUTES_ID
 	ld [hSelectedOption], a
 	; Access Minute Register
 	xor a
@@ -857,7 +884,7 @@ GameState07_TitleScreenMain:
 	; put the correct cursor tile
 	ld a, ">"
 	ld   [wOam+OAM_TILE_IDX], a
-	ld a, 3
+	ld a, OPTION_TIME_ID
 	ld [hSelectedOption], a 
     ret
 SeparateTens::
@@ -865,17 +892,17 @@ SeparateTens::
 ; out: a: units; b: tens
     ld b, -1
 .loop
-	  inc b
-	  sub 10
-	  jr nc, .loop
-	  add a, 10
-	  ret
+	inc b
+    sub 10
+	jr nc, .loop
+	add a, 10
+	ret
 
 ChangeToggleTile::
 ; get the VRAM address
 	ld h, HIGH(OPTION_LIGHTS)
 	ld b, LOW(OPTION_LIGHTS)
-	ld c, $40
+	ld c, $20
 	inc a
 	ld d, a
 	ld a, b

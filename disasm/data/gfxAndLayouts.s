@@ -374,4 +374,4 @@ CheckIfOtherPlayerCleared2PlusLines2::
     dec  c                                                       ; $0cde
     jr   nz, .copyDarkSolidRow                                   ; $0cdf
 	ret
-SECTION "Rosy Retrospection Data", ROMX, BANK[$4]
+

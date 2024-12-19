@@ -5,9 +5,23 @@ PlayNextPieceLoadNextAndHiddenPiece:
     ld   hl, wSpriteSpecs                                        ; $2007
     ld   [hl], $00                                               ; $200a
 
-; Y of $18
-    inc  l                                                       ; $200c
-    ld   [hl], $18                                               ; $200d
+; Y depends on settings
+    inc  l 
+    ld a, [sOptionRosyRetroMode]
+	cp a, 1
+	jr nz, .normal
+.rosyRetro
+    ld a, [sOptionColors]
+	cp a, 1
+	jr z, .ARS
+    ld   [hl], PIECE_SPAWN_Y_SRS
+	jr .continue
+.ARS 
+    ld   [hl], PIECE_SPAWN_Y_ARS
+    jr .continue
+.normal 
+    ld   [hl], PIECE_SPAWN_Y                                                      ; $2108
+.continue                                                      ; $200c                                              ; $200d
 
 ; X of $3f
     inc  l                                                       ; $200f
@@ -176,9 +190,22 @@ InGameHandlePieceFalling:
     jr   nz, .sendActivePieceToOam                               ; $2090
 
 ; process down every 3 frames
+; or every frame in Classic Rule
+    ld a, [sOptionRosyRetroMode]
+    and a
+    jr z, .noClassicRule
+    ld a, [sOptionColors]
+    and a
+    jr z, .noClassicRule
+    ld   a, $01                                                  ; $2092
+    ldh  [hTimer2], a
+; and set it as hard drop too
+    ld [wIsHardDrop], a
+    jr .continue
+.noClassicRule
     ld   a, $03                                                  ; $2092
     ldh  [hTimer2], a                                            ; $2094
-
+.continue
 ; inc times held without lifting down
     ld   hl, hNumTimesHoldingDownEvery3Frames                    ; $2096
     inc  [hl]                                                    ; $2099
@@ -228,7 +255,15 @@ InGameHandlePieceFalling:
     ld   a, [hl]                                                 ; $20c5
     ldh  [hNumCompletedTetrisRows], a                            ; $20c6
     add  $08                                                     ; $20c8
-    ld   [hl], a                                                 ; $20ca
+    ld   [hl], a
+    push af
+    ld a, [hButtonsHeld]
+    bit PADB_DOWN, a
+    jr nz, .stillHoldingDown
+    xor a
+    ld [wIsHardDrop], a
+.stillHoldingDown
+    pop af                                                 ; $20ca
 
 ; send active piece to oam and ret if no collision
     call Copy1stSpriteSpecToSprite4                              ; $20cb
@@ -283,10 +318,29 @@ InGameHandlePieceFalling:
 
 .fromNotHoldingDown:
 ; check if orig coords when active piece loaded
-    ld   a, [wSpriteSpecs+SPR_SPEC_BaseYOffset]                  ; $2103
-    cp   $18                                                     ; $2106
+    ld   a, [wSpriteSpecs+SPR_SPEC_BaseYOffset]
+    ld b, a
+    ld a, [sOptionRosyRetroMode]
+	cp a, 1
+	jr nz, .normal
+.rosyRetro
+    ld a, [sOptionColors]
+	cp a, 1
+	jr z, .ARS
+    ld a, b
+	cp PIECE_SPAWN_Y_SRS
+    ret nz
+	jr .continueb
+.ARS 
+    ld a, b   
+	cp PIECE_SPAWN_Y_ARS
+    ret nz
+    jr .continueb
+.normal 
+    ld a, b                ; $2103
+    cp   PIECE_SPAWN_Y                                           ; $2106
     ret  nz                                                      ; $2108
-
+.continueb
     ld   a, [wSpriteSpecs+SPR_SPEC_BaseXOffset]                  ; $2109
     cp   $3f                                                     ; $210c
     ret  nz                                                      ; $210e
@@ -348,10 +402,10 @@ InGameCheckIfAnyTetrisRowsComplete:
     xor  a                                                       ; $2148
     ldh  [hNumCompletedTetrisRows], a                            ; $2149
 
-; check every row from the 3rd row down
+; check every row 
     ld   de, wRamBufferAddressesForCompletedRows                 ; $214b
-    ld   hl, wGameScreenBuffer+2*GB_TILE_WIDTH+2                 ; $214e
-    ld   b, GAME_SCREEN_ROWS-2                                   ; $2151
+    ld   hl, wGameScreenBuffer+2                 ; $214e
+    ld   b, GAME_SCREEN_ROWS                                   ; $2151
 
 .nextRow:
     ld   c, GAME_SQUARE_WIDTH                                    ; $2153
@@ -514,9 +568,10 @@ FlashCompletedTetrisRows:
 .upperOuterLoop:
 ; get vram dest address for row
     sub  HIGH(wGameScreenBuffer-_SCRN0)                          ; $21f6
-    ld   h, a                                                    ; $21f8
+    ld   h, a
+                                                        ; $21f8
     inc  de                                                      ; $21f9
-    ld   a, [de]                                                 ; $21fa
+    ld   a, [de]                                                ; $21fa
     ld   l, a                                                    ; $21fb
 
 ; when counter = 6, use an empty tile to clear
@@ -548,15 +603,15 @@ FlashCompletedTetrisRows:
     inc  a                                                       ; $2213
     ldh  [hTetrisFlashCount], a                                  ; $2214
 
-    cp   $05                                                     ; $2216
-    jr   z, .flashed5times                                       ; $2218
+    cp   $03                                                     ; $2216
+    jr   z, .flashed3times                                       ; $2218
 
 ; 10 frames until next flash
     ld   a, $0a                                                  ; $221a
     ldh  [hTimer1], a                                            ; $221c
     ret                                                          ; $221e
 
-.flashed5times:
+.flashed3times:
 ; clear counter, set timer until shift
     xor  a                                                       ; $221f
     ldh  [hTetrisFlashCount], a                                  ; $2220
@@ -581,7 +636,7 @@ FlashCompletedTetrisRows:
     sub  HIGH(wGameScreenBuffer-_SCRN0)                          ; $2230
     ld   c, a                                                    ; $2232
     inc  de                                                      ; $2233
-    ld   a, [de]                                                 ; $2234
+    ld   a, [de]                                                ; $2234
     ld   l, a                                                    ; $2235
 
 ; set for entire row
@@ -658,10 +713,24 @@ ShiftEntireGameRamBufferDownARow:
     ld   bc, -GB_TILE_WIDTH                                      ; $2271
     add  hl, bc                                                  ; $2274
 
-; stop when about to copy from top of screen
-    ld   a, h                                                    ; $2275
-    cp   HIGH(wGameScreenBuffer-$20)                             ; $2276
-    jr   nz, .nextRow                                            ; $2278
+; stop when about to copy from top of screen, fix pointer if past the top
+    ld a, h
+    cp a, $c7
+    jr nz, .dontFixPointer
+    ld a, $cb
+    ld h, a
+    ld a, d
+    cp a, $c7
+    jr nz, .dontFixPointer
+    ld a, $cb
+    ld d, a
+.dontFixPointer
+    ld a, h                                                    ; $2275
+    cp   HIGH(wGameScreenBuffer.end-$80)                             ; $2276
+    jr   nz, .nextRow
+    ld a, l
+    cp   LOW(wGameScreenBuffer.end-$7e)                             ; $2276
+    jr   nz, .nextRow                                             ; $2278
 
     pop  de                                                      ; $227a
     inc  de                                                      ; $227b
@@ -732,8 +801,22 @@ ShiftEntireGameRamBufferDownARow2:
     add  hl, bc                                                  ; $2274
 
 ; stop when about to copy from top of screen
-    ld   a, h                                                    ; $2275
-    cp   HIGH(sGameScreenBufferAttr-$20)                             ; $2276
+    ld   a, h       
+    cp a, $9f
+    jr nz, .dontFixPointer
+    ld a, $a3
+    ld h, a
+    ld a, d       
+    cp a, $9f
+    jr nz, .dontFixPointer
+    ld a, $a3
+    ld d, a
+.dontFixPointer 
+    ld a, h                                             ; $2275
+    cp   HIGH(sGameScreenBufferAttr.end-$80)                             ; $2276
+    jr   nz, .nextRow
+    ld a, l
+    cp   LOW(sGameScreenBufferAttr.end-$7e)                             ; $2276
     jr   nz, .nextRow                                            ; $2278
 
     pop  de                                                      ; $227a
@@ -778,13 +861,96 @@ ClearPointersToCompletedTetrisRows:
     jr   nz, .loop                                               ; $229b
     xor a
     ld [rVBK], a 
-    ret                                                          ; $229d
+    ret
+CopyRamBufferRow21ToVram:
+    ; return if it's not time for this row to move down yet
+    ldh  a, [hRowsShiftingDownState]                             ; $229e
+    cp   ROWS_SHIFTING_DOWN_ROW_START                            ; $22a0
+    ret  nz                                                      ; $22a2
+    
+    ld   hl, _SCRN0+GB_TILE_WIDTH*28+2                           ; $22a3
+    ld   de, wGameScreenBuffer+GB_TILE_WIDTH*28+2                ; $22a6
+    call CopyRamBufferRowToVram
+    dec  a                                                       ; $24b7
+    ldh  [hRowsShiftingDownState], a                                  ; $22a9
+    ld a, 1
+    ld [rVBK], a
+    ld   hl, _SCRN0+GB_TILE_WIDTH*28+2                           ; $22a3
+    ld   de, sGameScreenBufferAttr+GB_TILE_WIDTH*28+2                ; $22a6
+    call CopyRamBufferRowToVram    
+    push af    
+    xor a
+    ld [rVBK], a       
+    pop af                               ; $22a9
+    ret   
+CopyRamBufferRow20ToVram:
+; return if it's not time for this row to move down yet
+    ldh  a, [hRowsShiftingDownState]                             ; $229e
+    cp   ROWS_SHIFTING_DOWN_ROW_START+1                            ; $22a0
+    ret  nz                                                      ; $22a2
 
+    ld   hl, _SCRN0+GB_TILE_WIDTH*29+2                           ; $22a3
+    ld   de, wGameScreenBuffer+GB_TILE_WIDTH*29+2                ; $22a6
+    call CopyRamBufferRowToVram
+    dec  a                                                       ; $24b7
+    ldh  [hRowsShiftingDownState], a                                  ; $22a9
+    ld a, 1
+    ld [rVBK], a
+    ld   hl, _SCRN0+GB_TILE_WIDTH*29+2                           ; $22a3
+    ld   de, sGameScreenBufferAttr+GB_TILE_WIDTH*29+2                ; $22a6
+    call CopyRamBufferRowToVram    
+    push af    
+    xor a
+    ld [rVBK], a       
+    pop af                               ; $22a9
+    ret; $229d
+CopyRamBufferRow19ToVram:
+; return if it's not time for this row to move down yet
+    ldh  a, [hRowsShiftingDownState]                             ; $229e
+    cp   ROWS_SHIFTING_DOWN_ROW_START+2                            ; $22a0
+    ret  nz                                                      ; $22a2
+
+    ld   hl, _SCRN0+GB_TILE_WIDTH*30+2                           ; $22a3
+    ld   de, wGameScreenBuffer+GB_TILE_WIDTH*30+2                ; $22a6
+    call CopyRamBufferRowToVram
+    dec  a                                                       ; $24b7
+    ldh  [hRowsShiftingDownState], a                                  ; $22a9
+    ld a, 1
+    ld [rVBK], a
+    ld   hl, _SCRN0+GB_TILE_WIDTH*30+2                           ; $22a3
+    ld   de, sGameScreenBufferAttr+GB_TILE_WIDTH*30+2                ; $22a6
+    call CopyRamBufferRowToVram    
+    push af    
+    xor a
+    ld [rVBK], a       
+    pop af                               ; $22a9
+    ret
+CopyRamBufferRow18ToVram:
+; return if it's not time for this row to move down yet
+    ldh  a, [hRowsShiftingDownState]                             ; $229e
+    cp   ROWS_SHIFTING_DOWN_ROW_START+3                            ; $22a0
+    ret  nz                                                      ; $22a2
+
+    ld   hl, _SCRN0+GB_TILE_WIDTH*31+2                           ; $22a3
+    ld   de, wGameScreenBuffer+GB_TILE_WIDTH*31+2                ; $22a6
+    call CopyRamBufferRowToVram
+    dec  a                                                       ; $24b7
+    ldh  [hRowsShiftingDownState], a                                  ; $22a9
+    ld a, 1
+    ld [rVBK], a
+    ld   hl, _SCRN0+GB_TILE_WIDTH*31+2                           ; $22a3
+    ld   de, sGameScreenBufferAttr+GB_TILE_WIDTH*31+2                ; $22a6
+    call CopyRamBufferRowToVram    
+    push af    
+    xor a
+    ld [rVBK], a       
+    pop af                               ; $22a9
+    ret
 
 CopyRamBufferRow17ToVram:
 ; return if it's not time for this row to move down yet
     ldh  a, [hRowsShiftingDownState]                             ; $229e
-    cp   ROWS_SHIFTING_DOWN_ROW_START                            ; $22a0
+    cp   ROWS_SHIFTING_DOWN_ROW_START+4                            ; $22a0
     ret  nz                                                      ; $22a2
 
     ld   hl, _SCRN0+GB_TILE_WIDTH*17+2                           ; $22a3
@@ -806,7 +972,7 @@ CopyRamBufferRow17ToVram:
 
 CopyRamBufferRow16ToVram:
     ldh  a, [hRowsShiftingDownState]                             ; $22ad
-    cp   ROWS_SHIFTING_DOWN_ROW_START+1                          ; $22af
+    cp   ROWS_SHIFTING_DOWN_ROW_START+5                          ; $22af
     ret  nz                                                      ; $22b1
 
     ld   hl, _SCRN0+GB_TILE_WIDTH*16+2                           ; $22b2
@@ -828,7 +994,7 @@ CopyRamBufferRow16ToVram:
 
 CopyRamBufferRow15ToVram:
     ldh  a, [hRowsShiftingDownState]                             ; $22bc
-    cp   ROWS_SHIFTING_DOWN_ROW_START+2                          ; $22be
+    cp   ROWS_SHIFTING_DOWN_ROW_START+6                          ; $22be
     ret  nz                                                      ; $22c0
 
     ld   hl, _SCRN0+GB_TILE_WIDTH*15+2                           ; $22c1
@@ -850,7 +1016,7 @@ CopyRamBufferRow15ToVram:
 
 CopyRamBufferRow14ToVram:
     ldh  a, [hRowsShiftingDownState]                             ; $22cb
-    cp   ROWS_SHIFTING_DOWN_ROW_START+3                          ; $22cd
+    cp   ROWS_SHIFTING_DOWN_ROW_START+7                          ; $22cd
     ret  nz                                                      ; $22cf
 
     ld   hl, _SCRN0+GB_TILE_WIDTH*14+2                           ; $22d0
@@ -872,7 +1038,7 @@ CopyRamBufferRow14ToVram:
 
 CopyRamBufferRow13ToVram:
     ldh  a, [hRowsShiftingDownState]                             ; $22da
-    cp   ROWS_SHIFTING_DOWN_ROW_START+4                          ; $22dc
+    cp   ROWS_SHIFTING_DOWN_ROW_START+8                          ; $22dc
     ret  nz                                                      ; $22de
 
     ld   hl, _SCRN0+GB_TILE_WIDTH*13+2                           ; $22df
@@ -894,7 +1060,7 @@ CopyRamBufferRow13ToVram:
 
 CopyRamBufferRow12ToVram:
     ldh  a, [hRowsShiftingDownState]                             ; $22e9
-    cp   ROWS_SHIFTING_DOWN_ROW_START+5                          ; $22eb
+    cp   ROWS_SHIFTING_DOWN_ROW_START+9                          ; $22eb
     ret  nz                                                      ; $22ed
 
     ld   hl, _SCRN0+GB_TILE_WIDTH*12+2                           ; $22ee
@@ -916,7 +1082,7 @@ CopyRamBufferRow12ToVram:
 
 CopyRamBufferRow11ToVram:
     ldh  a, [hRowsShiftingDownState]                             ; $22f8
-    cp   ROWS_SHIFTING_DOWN_ROW_START+6                          ; $22fa
+    cp   ROWS_SHIFTING_DOWN_ROW_START+10                          ; $22fa
     ret  nz                                                      ; $22fc
 
     ld   hl, _SCRN0+GB_TILE_WIDTH*11+2                           ; $22fd
@@ -966,7 +1132,7 @@ CopyRamBufferRow11ToVram:
 
 CopyRamBufferRow10ToVram:
     ldh  a, [hRowsShiftingDownState]                             ; $2323
-    cp   ROWS_SHIFTING_DOWN_ROW_START+7                          ; $2325
+    cp   ROWS_SHIFTING_DOWN_ROW_START+11                          ; $2325
     ret  nz                                                      ; $2327
 
     ld   hl, _SCRN0+GB_TILE_WIDTH*10+2                           ; $2328
@@ -988,7 +1154,7 @@ CopyRamBufferRow10ToVram:
 
 CopyRamBufferRow9ToVram:
     ldh  a, [hRowsShiftingDownState]                             ; $2332
-    cp   ROWS_SHIFTING_DOWN_ROW_START+8                          ; $2334
+    cp   ROWS_SHIFTING_DOWN_ROW_START+12                          ; $2334
     ret  nz                                                      ; $2336
 
     ld   hl, _SCRN0+GB_TILE_WIDTH*9+2                            ; $2337
@@ -1010,7 +1176,7 @@ CopyRamBufferRow9ToVram:
 
 CopyRamBufferRow8ToVram:
     ldh  a, [hRowsShiftingDownState]                             ; $2341
-    cp   ROWS_SHIFTING_DOWN_ROW_START+9                          ; $2343
+    cp   ROWS_SHIFTING_DOWN_ROW_START+13                          ; $2343
     ret  nz                                                      ; $2345
 
     ld   hl, _SCRN0+GB_TILE_WIDTH*8+2                            ; $2346
@@ -1032,7 +1198,7 @@ CopyRamBufferRow8ToVram:
 
 CopyRamBufferRow7ToVram:
     ldh  a, [hRowsShiftingDownState]                             ; $2350
-    cp   ROWS_SHIFTING_DOWN_ROW_START+10                         ; $2352
+    cp   ROWS_SHIFTING_DOWN_ROW_START+14                         ; $2352
     ret  nz                                                      ; $2354
 
     ld   hl, _SCRN0+GB_TILE_WIDTH*7+2                            ; $2355
@@ -1054,7 +1220,7 @@ CopyRamBufferRow7ToVram:
 
 CopyRamBufferRow6ToVram:
     ldh  a, [hRowsShiftingDownState]                             ; $235f
-    cp   ROWS_SHIFTING_DOWN_ROW_START+11                         ; $2361
+    cp   ROWS_SHIFTING_DOWN_ROW_START+15                         ; $2361
     ret  nz                                                      ; $2363
 
     ld   hl, _SCRN0+GB_TILE_WIDTH*6+2                            ; $2364
@@ -1076,7 +1242,7 @@ CopyRamBufferRow6ToVram:
 
 CopyRamBufferRow5ToVram:
     ldh  a, [hRowsShiftingDownState]                             ; $236e
-    cp   ROWS_SHIFTING_DOWN_ROW_START+12                         ; $2370
+    cp   ROWS_SHIFTING_DOWN_ROW_START+16                         ; $2370
     ret  nz                                                      ; $2372
 
     ld   hl, _SCRN0+GB_TILE_WIDTH*5+2                            ; $2373
@@ -1098,7 +1264,7 @@ CopyRamBufferRow5ToVram:
 
 CopyRamBufferRow4ToVram:
     ldh  a, [hRowsShiftingDownState]                             ; $237d
-    cp   ROWS_SHIFTING_DOWN_ROW_START+13                         ; $237f
+    cp   ROWS_SHIFTING_DOWN_ROW_START+17                         ; $237f
     ret  nz                                                      ; $2381
 
     ld   hl, _SCRN0+GB_TILE_WIDTH*4+2                            ; $2382
@@ -1120,7 +1286,7 @@ CopyRamBufferRow4ToVram:
 
 CopyRamBufferRow3ToVram:
     ldh  a, [hRowsShiftingDownState]                             ; $238c
-    cp   ROWS_SHIFTING_DOWN_ROW_START+14                         ; $238e
+    cp   ROWS_SHIFTING_DOWN_ROW_START+18                         ; $238e
     ret  nz                                                      ; $2390
 
     ld   hl, _SCRN0+GB_TILE_WIDTH*3+2                            ; $2391
@@ -1145,7 +1311,7 @@ CopyRamBufferRow3ToVram:
 
 CopyRamBufferRow2ToVram:
     ldh  a, [hRowsShiftingDownState]                             ; $239e
-    cp   ROWS_SHIFTING_DOWN_ROW_START+15                         ; $23a0
+    cp   ROWS_SHIFTING_DOWN_ROW_START+19                         ; $23a0
     ret  nz                                                      ; $23a2
 
     ld   hl, _SCRN0+GB_TILE_WIDTH*2+2                            ; $23a3
@@ -1173,7 +1339,7 @@ CopyRamBufferRow2ToVram:
 
 CopyRamBufferRow1ToVram:
     ldh  a, [hRowsShiftingDownState]                             ; $23b7
-    cp   ROWS_SHIFTING_DOWN_ROW_START+16                         ; $23b9
+    cp   ROWS_SHIFTING_DOWN_ROW_START+20                         ; $23b9
     ret  nz                                                      ; $23bb
 
     ld   hl, _SCRN0+GB_TILE_WIDTH+2                              ; $23bc
@@ -1199,7 +1365,7 @@ CopyRamBufferRow1ToVram:
 
 CopyRamBufferRow0ToVram:
     ldh  a, [hRowsShiftingDownState]                             ; $23cc
-    cp   ROWS_SHIFTING_DOWN_ROW_START+17                         ; $23ce
+    cp   ROWS_SHIFTING_DOWN_ROW_START+21                         ; $23ce
     ret  nz                                                      ; $23d0
 
 ; can make pieces fall again
@@ -1663,9 +1829,7 @@ RetZIfNoCollisionForPiece:
     add  HIGH(wGameScreenBuffer-_SCRN0)                          ; $2587
     ld   h, a                                                    ; $2589
     ld   a, [hl]                                                 ; $258a
-    cp   TILE_FLASHING_PIECE+1                                               ; $258b
-    jr   z, .empty
-    cp   TILE_EMPTY                                              ; $258b
+    cp   TILE_FLASHING_PIECE+1                                               ; $258b                                             ; $258b
     jr   nz, .notEmpty                                           ; $258d
 .empty
 ; is empty tile, get tile idx address and inc to next sprite Y
@@ -1696,8 +1860,24 @@ InGameAddPieceToVram:
 ; ret if wrong state
     ldh  a, [hPieceFallingState]                                 ; $25a1
     cp   FALLING_PIECE_HIT_BOTTOM                                ; $25a3
-    ret  nz                                                      ; $25a5
-
+    ret  nz
+    ld a, [sOptionRosyRetroMode]
+    and a
+    jr z, .noLockDelay
+    ld a, [wIsHardDrop]
+    and a
+    jr nz, .noLockDelay
+    ld a, [wLockDelay]
+    and a
+    jr nz, .skipLockDelaySet
+    ld a, LOCK_DELAY
+    ld [wLockDelay], a
+.skipLockDelaySet
+    ld a, [wLockDelay]
+    dec a
+    ld [wLockDelay], a
+    ret nz
+.noLockDelay; $25a5
 ; piece is 4 squares, get oam details for played piece
     ld   hl, wOam+OAM_SIZEOF*4                                   ; $25a6
     ld   b, $04                                                  ; $25a9
@@ -1733,13 +1913,16 @@ InGameAddPieceToVram:
     ld   a, [hl]
 ; convert from object tile to bg tile
     call ConvertFromObjectTileToBGTile 
-    call WaitVRAM                                              ; $25c3
-    ld   [de], a                                                 ; $25c4
+    call WaitVRAM                                        ; $25c3
+    ld   [de], a                                                ; $25c4
 
 ; as well as game screen buffer
     ld   a, d                                                    ; $25c5
     add  HIGH(wGameScreenBuffer-_SCRN0)                          ; $25c6
-    ld   d, a                                                    ; $25c8
+    ld   d, a
+    ld   a, e    
+    add  LOW(wGameScreenBuffer-_SCRN0)   
+    ld   e, a                                             ; $25c8
     ld   a, [hl+]     
     call ConvertFromObjectTileToBGTile                                           ; $25c9
     ld   [de], a                                                 ; $25ca
@@ -1776,7 +1959,17 @@ InGameAddPieceToVram1:
     ldh  a, [hPieceFallingState]                                 ; $25a1
     cp   FALLING_PIECE_HIT_BOTTOM                                ; $25a3
     ret  nz                                                      ; $25a5
-    
+    ld a, [sOptionRosyRetroMode]
+    and a
+    jr z, .noLockDelay
+    ld a, [wIsHardDrop]
+    and a
+    jr nz, .noLockDelay
+    ld a, [wLockDelay]
+    and a
+    ret nz
+.noLockDelay
+IgnoreLockDelay1:
     ld a, 1
     ld [rVBK], a
     ; piece is 4 squares, get oam details for played piece
@@ -1822,14 +2015,17 @@ InGameAddPieceToVram1:
     ld a, [hl]
 ; Color
     pop hl
-    call WaitVRAM                                              ; $25c3
-    ld   [de], a                                                 ; $25c4
+    call WaitVRAM                                        ; $25c3
+    ld   [de], a                                            ; $25c3                                                ; $25c4
     
 ; as well as game screen buffer
     ld c, a
     ld   a, d                                                    ; $25c5
     add  HIGH(sGameScreenBufferAttr-_SCRN0)                          ; $25c6
-    ld   d, a                                                    ; $25c8
+    ld   d, a 
+    ld   a, e    
+    add  LOW(sGameScreenBufferAttr-_SCRN0)   
+    ld   e, a                                                    ; $25c8
     ld a, c                                               ; $25c9
     ld   [de], a                                                 ; $25ca
     inc  l                                                       ; $25cb

@@ -209,3 +209,8 @@ wTransitionTimer::
 
 wUpdateTimer::
     ds 2
+
+wLockDelay::
+    ds 1
+wIsHardDrop::
+    ds 1
