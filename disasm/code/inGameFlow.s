@@ -22,7 +22,10 @@ PlayNextPieceLoadNextAndHiddenPiece:
 .normal 
     ld   [hl], PIECE_SPAWN_Y                                                      ; $2108
 .continue                                                      ; $200c                                              ; $200d
-
+    ld a, [wPieceManips]
+    xor a
+    ld [wPieceManips], a
+    ld [wIsHardDrop], a
 ; X of $3f
     inc  l                                                       ; $200f
     ld   [hl], $3f                                               ; $2010
@@ -44,7 +47,6 @@ PlayNextPieceLoadNextAndHiddenPiece:
     inc l
     ld [hl], a
     pop af
-
 ; store piece type in C
     and  $fc                                                     ; $2017
     ld   c, a                                                    ; $2019
@@ -55,7 +57,10 @@ PlayNextPieceLoadNextAndHiddenPiece:
 
     ldh  a, [hIs2Player]                                         ; $201f
     and  a                                                       ; $2021
-    jr   z, .only1player                                         ; $2022
+    jr   z, .only1player  
+    ; reset times held for new press
+    ld   hl, hNumTimesHoldingDownEvery3Frames                    ; $20a4
+    ld   [hl], $00                                       ; $2022
 
 .inDemoOr2Player:
 ; get next piece
@@ -154,6 +159,18 @@ PlayNextPieceLoadNextAndHiddenPiece:
 ; update frames to move down for piece
     ldh  a, [hNumFramesUntilPiecesMoveDown]                      ; $206c
     ldh  [hNumFramesUntilCurrPieceMovesDown], a                  ; $206e
+    ld c, a
+; check if Rosy Retro mode is on
+    ld a, [sOptionRosyRetroMode]
+    and a
+    ld a, c
+    jr z, .dontCheckGameOver
+    ; send active piece to oam and continue if no collision
+    call Copy1stSpriteSpecToSprite4                              ; $20cb
+    call RetZIfNoCollisionForPiece
+    jr z, .dontCheckGameOver
+    jp GameOver
+.dontCheckGameOver
     ret                                                          ; $2070
 
 
@@ -180,9 +197,9 @@ InGameHandlePieceFalling:
     jr   nz, .sendActivePieceToOam                               ; $2086
 
 ; proceed if piece falling state = 0, and rows aren't shifting down
-    ldh  a, [hPieceFallingState]                                 ; $2088
-    and  a                                                       ; $208a
-    jr   nz, .sendActivePieceToOam                               ; $208b
+;    ldh  a, [hPieceFallingState]                                 ; $2088
+;    and  a                                                       ; $208a
+;    jr   nz, .sendActivePieceToOam                               ; $208b
 
 ; FALLING_PIECE_NONE
     ldh  a, [hRowsShiftingDownState]                             ; $208d
@@ -217,10 +234,7 @@ InGameHandlePieceFalling:
     cp   PADF_DOWN                                               ; $20a0
     jr   z, .holdingDown                                         ; $20a2
 
-.afterPressedDown:
-; reset times held for new press
-    ld   hl, hNumTimesHoldingDownEvery3Frames                    ; $20a4
-    ld   [hl], $00                                               ; $20a7
+.afterPressedDown:                                               ; $20a7
 
 ; dec frames, and return if > 0
     ldh  a, [hNumFramesUntilCurrPieceMovesDown]                  ; $20a9
@@ -268,9 +282,12 @@ InGameHandlePieceFalling:
 ; send active piece to oam and ret if no collision
     call Copy1stSpriteSpecToSprite4                              ; $20cb
     call RetZIfNoCollisionForPiece                               ; $20ce
-    and  a                                                       ; $20d1
-    ret  z                                                       ; $20d2
-
+    and  a
+;    jr z, .collision
+;    ld a, LOCK_DELAY
+;    ld [wLockDelay], a                                                        ; $20d1
+    jp z, StepResetLockDelay                                                       ; $20d2
+;.collision
 ; collision detected, reset Y to previous, and send to oam
     ldh  a, [hNumCompletedTetrisRows]                            ; $20d3
     ld   hl, wSpriteSpecs+SPR_SPEC_BaseYOffset                   ; $20d5
@@ -347,18 +364,16 @@ InGameHandlePieceFalling:
 
 ; give a change to move piece left and right, but skipping game over once
 ; while in orig coords
+
+; Unless Rosy Retro mode is enabled
+    ld a, [sOptionRosyRetroMode]
+    and a
+    jp nz, GameOver
     ld   hl, hIsPieceStuckOnTopRow                               ; $210f
     ld   a, [hl]                                                 ; $2112
     cp   $01                                                     ; $2113
     jr   nz, .skipGameOver                                       ; $2115
-
-; clear sound, set game over state, and play game over wav sound
-    call ThunkInitSound                                          ; $2117
-    ld   a, GS_GAME_OVER_INIT                                    ; $211a
-    ldh  [hGameState], a                                         ; $211c
-    ld   a, WAV_GAME_OVER                                        ; $211e
-    ld   [wWavSoundToPlay], a                                    ; $2120
-    ret                                                          ; $2123
+    jp GameOver
 
 .skipGameOver:
     inc  [hl]                                                    ; $2124
@@ -1654,15 +1669,24 @@ InGameCheckButtonsPressed:
     ld   a, [hl]                                                 ; $24c4
     ldh  [hPreRotationSpecIdx], a                                ; $24c5
 
-; check if rotating
+; check if rotating or hard dropping/sonic dropping
     ldh  a, [hButtonsPressed]                                    ; $24c7
     ld   b, a                                                    ; $24c9
     bit  PADB_B, b                                               ; $24ca
     jr   nz, .pressedB                                           ; $24cc
 
     bit  PADB_A, b                                               ; $24ce
-    jr   z, .afterCollisionCheck                                 ; $24d0
+    jr   nz, .pressedA                                ; $24d0
 
+    ld a, [sOptionRosyRetroMode]
+    and a
+    jr z, .notRosy
+
+    bit PADB_UP, b
+    jp nz, .hardDrop
+.notRosy
+    jr .afterCollisionCheck 
+.pressedA
 ; pressed A, spec idx -= 1, wrapping 0 to 3
     ld   a, [hl]                                                 ; $24d2
     and  $03                                                     ; $24d3
@@ -1698,8 +1722,20 @@ InGameCheckButtonsPressed:
     ld   [wSquareSoundToPlay], a                                 ; $24f0
     call Copy1stSpriteSpecToSprite4                              ; $24f3
     call RetZIfNoCollisionForPiece                               ; $24f6
-    and  a                                                       ; $24f9
-    jr   z, .afterCollisionCheck                                 ; $24fa
+    and  a
+    jp z, MoveResetLockDelay
+;    jr z, .collision
+;    ld a, [sOptionRosyRetroMode]
+;    and a
+;    ret z
+;    ld a, [sOptionColors]
+;    and a
+;    ret z
+;    ld a, LOCK_DELAY
+;    ld [wLockDelay], a                                                       ; $256f
+;    ret                                                       ; $2570
+;.collision                                                       ; $24f9
+;    jr .afterCollisionCheck                                 ; $24fa
 
 ; collision detected, dont play sound, use orig spec idx and send to oam
     lda SND_NONE                                                 ; $24fc
@@ -1723,7 +1759,25 @@ InGameCheckButtonsPressed:
     bit  PADB_RIGHT, b                                           ; $2515
 
 ; orig sticky counter
-    ld   a, $17                                                  ; $2517
+    push af
+    ld a, [sOptionRosyRetroMode]
+    and a
+    jr nz, .srs
+.og
+    pop af
+    ld a, DAS
+    jr .setDas 
+.srs
+    ld a, [sOptionColors]
+    and a
+    jr nz, .ars
+    pop af
+    ld a, DAS_SRS
+    jr .setDas
+.ars
+    pop af
+    ld   a, DAS_ARS
+.setDas                                                  ; $2517
     jr   nz, .pressedRight                                       ; $2519
 
     bit  PADB_RIGHT, c                                           ; $251b
@@ -1735,7 +1789,21 @@ InGameCheckButtonsPressed:
     ldh  [hStickyButtonCounter], a                               ; $2522
     ret  nz                                                      ; $2524
 
-    ld   a, $09                                                  ; $2525
+    ld a, [sOptionRosyRetroMode]
+    and a
+    jr nz, .srs1
+.og1
+    ld a, ARR
+    jr .setArr 
+.srs1
+    ld a, [sOptionColors]
+    and a
+    jr nz, .ars1
+    ld a, ARR_SRS
+    jr .setArr
+.ars1
+    ld   a, ARR_ARS
+.setArr                                                  ; $2525
 
 .pressedRight:
     ldh  [hStickyButtonCounter], a                               ; $2527
@@ -1747,9 +1815,23 @@ InGameCheckButtonsPressed:
     call Copy1stSpriteSpecToSprite4                              ; $252d
     ld   a, SND_PIECE_MOVED_HORIZ                                ; $2530
     ld   [wSquareSoundToPlay], a                                 ; $2532
+;    push af
+;    xor a
+;    ld [hPieceFallingState], a
+;    pop af
     call RetZIfNoCollisionForPiece                               ; $2535
-    and  a                                                       ; $2538
-    ret  z                                                       ; $2539
+    and  a
+    jp  z, MoveResetLockDelay                                                        ; $2538
+;    jr z, .afterHorizCollisionCheck
+;    ld a, [sOptionRosyRetroMode]
+;    and a
+;    ret z
+;    ld a, [sOptionColors]
+;    and a
+;    ret z
+;    ld a, LOCK_DELAY
+;    ld [wLockDelay], a                                                       ; $256f
+;    ret                                                       ; $2570                                                       ; $2539
 
 .afterHorizCollisionCheck:
 ; collision detected, dont play a sound, get back orig X,
@@ -1771,7 +1853,25 @@ InGameCheckButtonsPressed:
     bit  PADB_LEFT, b                                            ; $254c
 
 ; sticky counter
-    ld   a, $17                                                  ; $254e
+    push af
+    ld a, [sOptionRosyRetroMode]
+    and a
+    jr nz, .srsLeft
+.ogLeft
+    pop af
+    ld a, DAS
+    jr .setDasLeft 
+.srsLeft
+    ld a, [sOptionColors]
+    and a
+    jr nz, .arsLeft
+    pop af
+    ld a, DAS_SRS
+    jr .setDasLeft
+.arsLeft
+    pop af
+    ld   a, DAS_ARS
+.setDasLeft                                                     ; $254e
     jr   nz, .pressedLeft                                        ; $2550
 
     bit  PADB_LEFT, c                                            ; $2552
@@ -1783,7 +1883,21 @@ InGameCheckButtonsPressed:
     ldh  [hStickyButtonCounter], a                               ; $2559
     ret  nz                                                      ; $255b
 
-    ld   a, $09                                                  ; $255c
+    ld a, [sOptionRosyRetroMode]
+    and a
+    jr nz, .srs1Left
+.og1Left
+    ld a, ARR
+    jr .setArrLeft 
+.srs1Left
+    ld a, [sOptionColors]
+    and a
+    jr nz, .ars1Left
+    ld a, ARR_SRS
+    jr .setArrLeft
+.ars1Left
+    ld   a, ARR_ARS
+.setArrLeft                                                  ; $255c
 
 .pressedLeft:
     ldh  [hStickyButtonCounter], a                               ; $255e
@@ -1797,14 +1911,81 @@ InGameCheckButtonsPressed:
     call Copy1stSpriteSpecToSprite4                              ; $2569
     call RetZIfNoCollisionForPiece                               ; $256c
     and  a                                                       ; $256f
-    ret  z                                                       ; $2570
+    jp  z, MoveResetLockDelay                                                       ; $2570
 
     jr   .afterHorizCollisionCheck                               ; $2571
+                              ; $2571
 
+.hardDrop:
+; move piece down, and store prev Y
+    ld   hl, wSpriteSpecs+SPR_SPEC_BaseYOffset                   ; $20c2
+    ld   a, [hl]                                                 ; $20c5
+    ldh  [hNumCompletedTetrisRows], a                            ; $20c6
+    add  $08                                                     ; $20c8
+    ld   [hl], a
+    ld hl, sPieceYandX
+    ld a, [hl]
+    add a, $08
+    ldi [hl], a
+    inc hl
+    ld a, [hl]
+    add a, $08
+    ldi [hl], a
+    inc hl
+    ld a, [hl]
+    add a, $08
+    ldi [hl], a
+    inc hl
+    ld a, [hl]
+    add a, $08
+    ldi [hl], a
+    inc hl  
+    ld   hl, hNumTimesHoldingDownEvery3Frames                    ; $2096
+    inc  [hl]
+    inc [hl]                                              ; $20ca
 
+; send active piece to oam and loop if no collision                              ; $20cb
+    call RetZIfNoCollisionForPieceHardDrop                               ; $20ce
+    and  a                                                       ; $20d1
+    jr z, .hardDrop                                                      ; $20d2
+; collision detected, reset Y to previous, and send to oam
+    ldh  a, [hNumCompletedTetrisRows]
+    ld   hl, hNumTimesHoldingDownEvery3Frames                    ; $2096
+    dec  [hl] 
+    dec [hl]                           ; $20d3
+    ld   hl, wSpriteSpecs+SPR_SPEC_BaseYOffset                   ; $20d5
+    ld   [hl], a                       
+    call Copy1stSpriteSpecToSprite4                          ; $20d8
+; piece still sunk into another piece?
+    call RetZIfNoCollisionForPiece
+    and a
+    jr z, .notSunk
+    ld   hl, wSpriteSpecs+SPR_SPEC_BaseYOffset                   ; $20d5
+    ld   a, [hl]
+    sub a, $08
+    ld [hl], a
+.notSunk
+    call Copy1stSpriteSpecToSprite4                              ; $20d9
+
+; set hit bottom state, and set wIsHardDrop to 1 if not Classic Rule
+    ld   a, FALLING_PIECE_HIT_BOTTOM                             ; $20dc
+    ldh  [hPieceFallingState], a  
+    ld a, [sOptionColors]
+    and a
+    jp z, .isHardDrop
+.isSonicDrop
+    xor a
+    ld [wIsHardDrop], a
+    inc a
+    ld   [wCanPressDownToMakePieceFall], a
+    jp .afterCollisionCheck
+.isHardDrop
+    ld a, 1
+    ld [wIsHardDrop], a
+    jp .afterCollisionCheck                               ; $20de
 RetZIfNoCollisionForPiece:
 ; hl is 1st address for active piece
-    ld   hl, wOam+OAM_SIZEOF*4                                   ; $2573
+    ld   hl, wOam+OAM_SIZEOF*4                                  ; $2573
     ld   b, $04                                                  ; $2576
 
 .nextSprite:
@@ -1834,9 +2015,9 @@ RetZIfNoCollisionForPiece:
 .empty
 ; is empty tile, get tile idx address and inc to next sprite Y
     pop  bc                                                      ; $258f
-    pop  hl                                                      ; $2590
-    inc  l                                                       ; $2591
-    inc  l                                                       ; $2592
+    pop  hl
+    inc l
+    inc l                                                      ; $2590                                                       ; $2592
 
 ; to next sprite
     dec  b                                                       ; $2593
@@ -1855,7 +2036,56 @@ RetZIfNoCollisionForPiece:
     ldh  [hPieceCollisionDetected], a                            ; $259e
     ret                                                          ; $25a0
 
+RetZIfNoCollisionForPieceHardDrop:
+; hl is 1st address for active piece
+    ld   hl, sPieceYandX                                  ; $2573
+    ld   b, $04                                                  ; $2576
 
+.nextSprite:
+; get Y into A
+    ld   a, [hl+]                                                ; $2578
+    ldh  [hCurrPieceSquarePixelY], a                             ; $2579
+
+; jump if X became 0 somehow
+    ld   a, [hl+]                                                ; $257b
+    and  a                                                       ; $257c
+    jr   z, .fromXis0                                            ; $257d
+
+    ldh  [hCurrPieceSquarePixelX], a                             ; $257f
+
+; push oam address for tile idx, and num sprites left
+    push hl                                                      ; $2581
+    push bc                                                      ; $2582
+    call GetScreen0AddressOfPieceSquare                          ; $2583
+
+; get ram buffer address
+    ld   a, h                                                    ; $2586
+    add  HIGH(wGameScreenBuffer-_SCRN0)                          ; $2587
+    ld   h, a                                                    ; $2589
+    ld   a, [hl]                                                 ; $258a
+    cp   TILE_FLASHING_PIECE+1                                               ; $258b                                             ; $258b
+    jr   nz, .notEmpty                                           ; $258d
+.empty
+; is empty tile, get tile idx address and inc to next sprite Y
+    pop  bc                                                      ; $258f
+    pop  hl                                                      ; $2590                                                       ; $2592
+
+; to next sprite
+    dec  b                                                       ; $2593
+    jr   nz, .nextSprite                                         ; $2594
+
+; or num sprites left = 0 (ie all blanks at piece)
+.fromXis0:
+    xor  a                                                       ; $2596
+    ldh  [hPieceCollisionDetected], a                            ; $2597
+    ret                                                          ; $2599
+
+.notEmpty:
+    pop  bc                                                      ; $259a
+    pop  hl                                                      ; $259b
+    ld   a, $01                                                  ; $259c
+    ldh  [hPieceCollisionDetected], a                            ; $259e
+    ret                                                          ; $25a0
 InGameAddPieceToVram:
 ; ret if wrong state
     ldh  a, [hPieceFallingState]                                 ; $25a1
@@ -1872,6 +2102,7 @@ InGameAddPieceToVram:
     jr nz, .skipLockDelaySet
     ld a, LOCK_DELAY
     ld [wLockDelay], a
+    ret
 .skipLockDelaySet
     ld a, [wLockDelay]
     dec a
@@ -2046,3 +2277,58 @@ PieceTileConversionLookUpTable:
     db $8f, $89, $8a, $8b, $80, $81, $82, $83, $84, $85, $86, $88
 PieceBGColorLookUpTable:
     db $00, $00, $01, $02, $03, $04, $01
+; Reset Lock Delay
+MoveResetLockDelay::
+    ; Only if the piece is touching the ground
+    ld a, [hPieceFallingState]
+    and a
+    ret z
+    ; Classic Rule doesn't have Move Reset
+    ld a, [sOptionColors]
+    and a
+    jr nz, .pieceNoLongerTouchingTheGround
+    ; no more than 15 resets
+    ld a, [wPieceManips]
+    cp a, 15
+    ret z
+    ld a, LOCK_DELAY
+    ld [wLockDelay], a
+    xor a
+    ld [hPieceFallingState], a
+    ld a, [wPieceManips]
+    inc a
+    ld [wPieceManips], a
+.pieceNoLongerTouchingTheGround
+    ;Check if the piece is now floating
+    ld   hl, wSpriteSpecs+SPR_SPEC_BaseYOffset                   ; $20d5
+    ld   a, [hl]
+    sub a, $08
+    ld [hl], a
+    call Copy1stSpriteSpecToSprite4
+    call RetZIfNoCollisionForPiece
+    jr nz, .pieceStillTouchingTheGround
+    xor a
+    ld [hPieceFallingState], a
+.pieceStillTouchingTheGround
+    ld   hl, wSpriteSpecs+SPR_SPEC_BaseYOffset                   ; $20d5
+    ld   a, [hl]
+    add a, $08
+    ld [hl], a
+    call Copy1stSpriteSpecToSprite4
+    ret
+
+StepResetLockDelay::
+    ld a, LOCK_DELAY
+    ld [wLockDelay], a
+;    xor a
+;    ld [hPieceFallingState], a
+    ret
+
+GameOver::
+; clear sound, set game over state, and play game over wav sound
+    call ThunkInitSound                                          ; $2117
+    ld   a, GS_GAME_OVER_INIT                                    ; $211a
+    ldh  [hGameState], a                                         ; $211c
+    ld   a, WAV_GAME_OVER                                        ; $211e
+    ld   [wWavSoundToPlay], a                                    ; $2120
+    ret                                                          ; $2123

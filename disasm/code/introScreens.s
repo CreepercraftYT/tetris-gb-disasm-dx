@@ -528,6 +528,9 @@ GameState07_TitleScreenMain:
 	and a
 	jr nz, .cursorPos
 .noRTC
+	ld a, [hSelectedOption]
+	and a
+    jr nz, .cursorPos
 	ld a, 1
 	ld [hSelectedOption], a
 .cursorPos

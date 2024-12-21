@@ -870,7 +870,7 @@ CopyToShadowOamBasedOnSpriteSpec:
 ; sprite spec base y + sprite spec base y offset + y offset for tile = tile Y
 	ldh  a, [hCurrSpriteSpecBaseYOffset]                            ; $2b05
 	add  b                                                          ; $2b07
-	adc  c                                                          ; $2b08
+	add  c                                                          ; $2b08
 	jr   .setSpriteY                                                ; $2b09
 
 .spriteSpecYFlipped:

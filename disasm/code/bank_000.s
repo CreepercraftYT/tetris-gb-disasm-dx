@@ -588,6 +588,7 @@ MainLoop:
 ; main game loop updates
     ld hl, $980f                     ; $01d8
 	call UpdateClock
+	call LoadPieceYandXPositionsToSram
 	call PollInput                                                  ; $02c4
 	call ProcessGameState                                           ; $02c7
 	call ThunkUpdateSound                                           ; $02ca
@@ -2305,7 +2306,24 @@ IsDMG::
 	ld a, %11100100
 	ld [rBGP], a 
 	jr IsDMG
-
+LoadPieceYandXPositionsToSram::
+	ld   hl, wOam+OAM_SIZEOF*4
+	ld   de, sPieceYandX
+	ld   b, $04
+	ld   c, $02
+.nextPos
+	ldi a, [hl]
+	ld [de], a
+	inc de
+	dec c
+	jr nz, .nextPos
+.nextBlock
+	inc hl
+	inc hl
+	ld c, $02
+	dec b
+	jr nz, .nextPos
+	ret  
 INCLUDE "code/gfx.s"
 
 INCLUDE "data/spriteData.s"

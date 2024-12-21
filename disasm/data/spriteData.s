@@ -104,115 +104,115 @@ SpriteData:
 
 SpriteSpec_00:
 	dw SpriteTiles_00
-	db $ef, $f0
+	db $F0, $f0
 
 SpriteSpec_01:
 	dw SpriteTiles_01
-	db $ef, $f0
+	db $F0, $f0
 
 SpriteSpec_02:
 	dw SpriteTiles_02
-	db $ef, $f0
+	db $F0, $f0
 
 SpriteSpec_03:
 	dw SpriteTiles_03
-	db $ef, $f0
+	db $F0, $f0
 
 SpriteSpec_04:
 	dw SpriteTiles_04
-	db $ef, $f0
+	db $F0, $f0
 
 SpriteSpec_05:
 	dw SpriteTiles_05
-	db $ef, $f0
+	db $F0, $f0
 
 SpriteSpec_06:
 	dw SpriteTiles_06
-	db $ef, $f0
+	db $F0, $f0
 
 SpriteSpec_07:
 	dw SpriteTiles_07
-	db $ef, $f0
+	db $F0, $f0
 
 SpriteSpec_08:
 	dw SpriteTiles_08
-	db $ef, $f0
+	db $F0, $f0
 
 SpriteSpec_09:
 	dw SpriteTiles_09
-	db $ef, $f0
+	db $F0, $f0
 
 SpriteSpec_0a:
 	dw SpriteTiles_0a
-	db $ef, $f0
+	db $F0, $f0
 
 SpriteSpec_0b:
 	dw SpriteTiles_0b
-	db $ef, $f0
+	db $F0, $f0
 
 SpriteSpec_0c:
 	dw SpriteTiles_0c
-	db $ef, $f0
+	db $F0, $f0
 
 SpriteSpec_0d:
 	dw SpriteTiles_0d
-	db $ef, $f0
+	db $F0, $f0
 
 SpriteSpec_0e:
 	dw SpriteTiles_0e
-	db $ef, $f0
+	db $F0, $f0
 
 SpriteSpec_0f:
 	dw SpriteTiles_0f
-	db $ef, $f0
+	db $F0, $f0
 
 SpriteSpec_10:
 	dw SpriteTiles_10
-	db $ef, $f0
+	db $F0, $f0
 
 SpriteSpec_11:
 	dw SpriteTiles_11
-	db $ef, $f0
+	db $F0, $f0
 
 SpriteSpec_12:
 	dw SpriteTiles_12
-	db $ef, $f0
+	db $F0, $f0
 
 SpriteSpec_13:
 	dw SpriteTiles_13
-	db $ef, $f0
+	db $F0, $f0
 
 SpriteSpec_14:
 	dw SpriteTiles_14
-	db $ef, $f0
+	db $F0, $f0
 
 SpriteSpec_15:
 	dw SpriteTiles_15
-	db $ef, $f0
+	db $F0, $f0
 
 SpriteSpec_16:
 	dw SpriteTiles_16
-	db $ef, $f0
+	db $F0, $f0
 
 SpriteSpec_17:
 	dw SpriteTiles_17
-	db $ef, $f0
+	db $F0, $f0
 
 SpriteSpec_18:
 	dw SpriteTiles_18
-	db $ef, $f0
+	db $F0, $f0
 
 SpriteSpec_19:
 	dw SpriteTiles_19
-	db $ef, $f0
+	db $F0, $f0
 
 SpriteSpec_1a:
 	dw SpriteTiles_1a
-	db $ef, $f0
+	db $F0, $f0
 
 SpriteSpec_1b:
 	dw SpriteTiles_1b
-	db $ef, $f0
+	db $F0, $f0
 
 SpriteSpec_1c:
 	dw SpriteTiles_1c
@@ -1016,7 +1016,7 @@ SpriteCoords_40:
 SpriteCoords_41:
 	db $00, $00, $00, $08, $00, $10, $08, $00, $08, $08, $08, $10, $10, $00, $10, $08, $10, $10
 
-SECTION "Rosy Retrospection Data", ROMX, BANK[$4]
+SECTION "Rosy Retrospection Sprite Data", ROMX, BANK[$4]
 SRS_SpriteData:
 	dw SRS_SpriteSpec_00
 	dw SRS_SpriteSpec_01
@@ -1115,115 +1115,115 @@ SRS_SpriteData:
 
 SRS_SpriteSpec_00:
 	dw SRS_SpriteTiles_00
-	db $f7, $f0
+	db $F8, $f0
 
 SRS_SpriteSpec_01:
 	dw SRS_SpriteTiles_01
-	db $f7, $f0
+	db $F8, $f0
 
 SRS_SpriteSpec_02:
 	dw SRS_SpriteTiles_02
-	db $f7, $f0
+	db $F8, $f0
 
 SRS_SpriteSpec_03:
 	dw SRS_SpriteTiles_03
-	db $f7, $f0
+	db $F8, $f0
 
 SRS_SpriteSpec_04:
 	dw SRS_SpriteTiles_04
-	db $f7, $f0
+	db $F8, $f0
 
 SRS_SpriteSpec_05:
 	dw SRS_SpriteTiles_05
-	db $f7, $f0
+	db $F8, $f0
 
 SRS_SpriteSpec_06:
 	dw SRS_SpriteTiles_06
-	db $f7, $f0
+	db $F8, $f0
 
 SRS_SpriteSpec_07:
 	dw SRS_SpriteTiles_07
-	db $f7, $f0
+	db $F8, $f0
 
 SRS_SpriteSpec_08:
 	dw SRS_SpriteTiles_08
-	db $f7, $f0
+	db $F8, $f0
 
 SRS_SpriteSpec_09:
 	dw SRS_SpriteTiles_09
-	db $f7, $f0
+	db $F8, $f0
 
 SRS_SpriteSpec_0a:
 	dw SRS_SpriteTiles_0a
-	db $f7, $f0
+	db $F8, $f0
 
 SRS_SpriteSpec_0b:
 	dw SRS_SpriteTiles_0b
-	db $f7, $f0
+	db $F8, $f0
 
 SRS_SpriteSpec_0c:
 	dw SRS_SpriteTiles_0c
-	db $f7, $f0
+	db $F8, $f0
 
 SRS_SpriteSpec_0d:
 	dw SRS_SpriteTiles_0d
-	db $f7, $f0
+	db $F8, $f0
 
 SRS_SpriteSpec_0e:
 	dw SRS_SpriteTiles_0e
-	db $f7, $f0
+	db $F8, $f0
 
 SRS_SpriteSpec_0f:
 	dw SRS_SpriteTiles_0f
-	db $f7, $f0
+	db $F8, $f0
 
 SRS_SpriteSpec_10:
 	dw SRS_SpriteTiles_10
-	db $f7, $f0
+	db $F8, $f0
 
 SRS_SpriteSpec_11:
 	dw SRS_SpriteTiles_11
-	db $f7, $f0
+	db $F8, $f0
 
 SRS_SpriteSpec_12:
 	dw SRS_SpriteTiles_12
-	db $f7, $f0
+	db $F8, $f0
 
 SRS_SpriteSpec_13:
 	dw SRS_SpriteTiles_13
-	db $f7, $f0
+	db $F8, $f0
 
 SRS_SpriteSpec_14:
 	dw SRS_SpriteTiles_14
-	db $f7, $f0
+	db $F8, $f0
 
 SRS_SpriteSpec_15:
 	dw SRS_SpriteTiles_15
-	db $f7, $f0
+	db $F8, $f0
 
 SRS_SpriteSpec_16:
 	dw SRS_SpriteTiles_16
-	db $f7, $f0
+	db $F8, $f0
 
 SRS_SpriteSpec_17:
 	dw SRS_SpriteTiles_17
-	db $f7, $f0
+	db $F8, $f0
 
 SRS_SpriteSpec_18:
 	dw SRS_SpriteTiles_18
-	db $f7, $f0
+	db $F8, $f0
 
 SRS_SpriteSpec_19:
 	dw SRS_SpriteTiles_19
-	db $f7, $f0
+	db $F8, $f0
 
 SRS_SpriteSpec_1a:
 	dw SRS_SpriteTiles_1a
-	db $f7, $f0
+	db $F8, $f0
 
 SRS_SpriteSpec_1b:
 	dw SRS_SpriteTiles_1b
-	db $f7, $f0
+	db $F8, $f0
 
 SRS_SpriteSpec_1c:
 	dw SRS_SpriteTiles_1c
@@ -1514,13 +1514,11 @@ SRS_SpriteTiles_0b:
 SRS_SpriteTiles_0c:
 	dw SRS_SpriteCoords_0c
 	db $fe, $fe, $fe, $fe
-	db $fe, $fe, $fe, $fe
 	db $fe, $83, $83, $fe
 	db $fe, $83, $83, $ff
 
 SRS_SpriteTiles_0d:
 	dw SRS_SpriteCoords_0d
-	db $fe, $fe, $fe, $fe
 	db $fe, $fe, $fe, $fe
 	db $fe, $83, $83, $fe
 	db $fe, $83, $83, $ff
@@ -1528,13 +1526,11 @@ SRS_SpriteTiles_0d:
 SRS_SpriteTiles_0e:
 	dw SRS_SpriteCoords_0e
 	db $fe, $fe, $fe, $fe
-	db $fe, $fe, $fe, $fe
 	db $fe, $83, $83, $fe
 	db $fe, $83, $83, $ff
 
 SRS_SpriteTiles_0f:
 	dw SRS_SpriteCoords_0f
-	db $fe, $fe, $fe, $fe
 	db $fe, $fe, $fe, $fe
 	db $fe, $83, $83, $fe
 	db $fe, $83, $83, $ff
@@ -2024,7 +2020,7 @@ SRS_SpriteCoords_39:
 SRS_SpriteCoords_40:
 SRS_SpriteCoords_41:
 	db $00, $00, $00, $08, $00, $10, $08, $00, $08, $08, $08, $10, $10, $00, $10, $08, $10, $10
-SECTION "Rosy Retrospection Data CR", ROMX, BANK[$5]
+SECTION "Rosy Retrospection Sprite Data CR", ROMX, BANK[$5]
 ARS_SpriteData:
 	dw ARS_SpriteSpec_00
 	dw ARS_SpriteSpec_01
@@ -2123,115 +2119,115 @@ ARS_SpriteData:
 
 ARS_SpriteSpec_00:
 	dw ARS_SpriteTiles_00
-	db $ef, $f0
+	db $F0, $f0
 
 ARS_SpriteSpec_01:
 	dw ARS_SpriteTiles_01
-	db $ef, $f0
+	db $F0, $f0
 
 ARS_SpriteSpec_02:
 	dw ARS_SpriteTiles_02
-	db $ef, $f0
+	db $F0, $f0
 
 ARS_SpriteSpec_03:
 	dw ARS_SpriteTiles_03
-	db $ef, $f0
+	db $F0, $f0
 
 ARS_SpriteSpec_04:
 	dw ARS_SpriteTiles_04
-	db $ef, $f0
+	db $F0, $f0
 
 ARS_SpriteSpec_05:
 	dw ARS_SpriteTiles_05
-	db $ef, $f0
+	db $F0, $f0
 
 ARS_SpriteSpec_06:
 	dw ARS_SpriteTiles_06
-	db $ef, $f0
+	db $F0, $f0
 
 ARS_SpriteSpec_07:
 	dw ARS_SpriteTiles_07
-	db $ef, $f0
+	db $F0, $f0
 
 ARS_SpriteSpec_08:
 	dw ARS_SpriteTiles_08
-	db $f7, $f0
+	db $F8, $f0
 
 ARS_SpriteSpec_09:
 	dw ARS_SpriteTiles_09
-	db $f7, $f0
+	db $F8, $f0
 
 ARS_SpriteSpec_0a:
 	dw ARS_SpriteTiles_0a
-	db $f7, $f0
+	db $F8, $f0
 
 ARS_SpriteSpec_0b:
 	dw ARS_SpriteTiles_0b
-	db $f7, $f0
+	db $F8, $f0
 
 ARS_SpriteSpec_0c:
 	dw ARS_SpriteTiles_0c
-	db $ef, $f0
+	db $F0, $f0
 
 ARS_SpriteSpec_0d:
 	dw ARS_SpriteTiles_0d
-	db $ef, $f0
+	db $F0, $f0
 
 ARS_SpriteSpec_0e:
 	dw ARS_SpriteTiles_0e
-	db $ef, $f0
+	db $F0, $f0
 
 ARS_SpriteSpec_0f:
 	dw ARS_SpriteTiles_0f
-	db $ef, $f0
+	db $F0, $f0
 
 ARS_SpriteSpec_10:
 	dw ARS_SpriteTiles_10
-	db $ef, $f0
+	db $F0, $f0
 
 ARS_SpriteSpec_11:
 	dw ARS_SpriteTiles_11
-	db $ef, $f0
+	db $F0, $f0
 
 ARS_SpriteSpec_12:
 	dw ARS_SpriteTiles_12
-	db $ef, $f0
+	db $F0, $f0
 
 ARS_SpriteSpec_13:
 	dw ARS_SpriteTiles_13
-	db $ef, $f0
+	db $F0, $f0
 
 ARS_SpriteSpec_14:
 	dw ARS_SpriteTiles_14
-	db $ef, $f0
+	db $F0, $f0
 
 ARS_SpriteSpec_15:
 	dw ARS_SpriteTiles_15
-	db $ef, $f0
+	db $F0, $f0
 
 ARS_SpriteSpec_16:
 	dw ARS_SpriteTiles_16
-	db $ef, $f0
+	db $F0, $f0
 
 ARS_SpriteSpec_17:
 	dw ARS_SpriteTiles_17
-	db $ef, $f0
+	db $F0, $f0
 
 ARS_SpriteSpec_18:
 	dw ARS_SpriteTiles_18
-	db $ef, $f0
+	db $F0, $f0
 
 ARS_SpriteSpec_19:
 	dw ARS_SpriteTiles_19
-	db $ef, $f0
+	db $F0, $f0
 
 ARS_SpriteSpec_1a:
 	dw ARS_SpriteTiles_1a
-	db $ef, $f0
+	db $F0, $f0
 
 ARS_SpriteSpec_1b:
 	dw ARS_SpriteTiles_1b
-	db $ef, $f0
+	db $F0, $f0
 
 ARS_SpriteSpec_1c:
 	dw ARS_SpriteTiles_1c

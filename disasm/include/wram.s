@@ -212,5 +212,12 @@ wUpdateTimer::
 
 wLockDelay::
     ds 1
+; also used for Classic Rule soft drop, bypasses the lock delay
 wIsHardDrop::
     ds 1
+; how many times has the piece been moved or rotated, if 15, don't reset the lock delay
+wPieceManips::
+    ds 1
+; Y and X position of each block of the piece on the screen
+sPieceYandX::
+    ds 2*4
