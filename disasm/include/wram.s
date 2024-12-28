@@ -221,3 +221,19 @@ wPieceManips::
 ; Y and X position of each block of the piece on the screen
 sPieceYandX::
     ds 2*4
+
+w7Bag::
+    ds 7
+wPiecesLeftInTheBag::
+    ds 1
+w35BagHistory::
+    ds 6
+
+sPlaceholder::
+    ds 4
+.end
+wNextQueue::
+    ds 2 
+
+wHoldUsed::
+    ds 1

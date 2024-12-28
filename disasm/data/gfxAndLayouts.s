@@ -77,6 +77,9 @@ Layout_RocketScene_Sunrise_Sunset::
 PieceColorLookUpTable:
     db $04, $01, $00, $02, $02, $05, $03
 .end
+PiecePreviewColorLookUpTable:
+    db $04, $01, $00, $02, $02, $01, $03
+.end
 SECTION "Night Layouts", ROMX[$4200], BANK[$3]
 Layout_TitleScreen_Night::
     INCBIN "data/layout_titleScreen_night.bin"
@@ -120,16 +123,16 @@ Attributes_BTypeSelectionScreen::
 	incbin "data/palmap_bTypeSelectionScreen.bin"
 
 Attributes_ATypeInGame::
-	incbin "data/palmap_aTypeInGame.bin"
+	incbin "data/palmap_aTypeInGameRosy.bin"
 
 Attributes_BTypeInGame::
-	incbin "data/palmap_bTypeInGame.bin"
+	incbin "data/palmap_bTypeInGameRosy.bin"
 
 Layout_ATypePaused::
-	incbin "data/layout_aTypePaused.bin"
+	incbin "data/layout_aTypePausedRosy.bin"
 
 Layout_BTypePaused::
-	incbin "data/layout_bTypePaused.bin"
+	incbin "data/layout_bTypePausedRosy.bin"
 .end
 Layout_DMG::
 	incbin "data/layout_dmg.bin"
@@ -216,7 +219,7 @@ BoardBackgroundColorTransition::
 	ld [wTransitionTimer+1], a
 	ret
 
-	Gfx_GridAnimation::
+Gfx_GridAnimation::
 	INCBIN "build/gridAnimation.2bpp"
 
 AnimateGrid::
@@ -375,3 +378,19 @@ CheckIfOtherPlayerCleared2PlusLines2::
     jr   nz, .copyDarkSolidRow                                   ; $0cdf
 	ret
 
+SECTION "Rosy Retrospection Graphics", ROMX[$5cc5], BANK[$4]
+;Attributes_ATypeInGameRosy::
+;	incbin "data/palmap_aTypeInGameRosy.bin"
+
+;Attributes_BTypeInGameRosy::
+;	incbin "data/palmap_bTypeInGameRosy.bin"
+
+;Layout_ATypePausedRosy::
+;	incbin "data/layout_aTypePausedRosy.bin"
+
+;Layout_BTypePausedRosy::
+;	incbin "data/layout_bTypePausedRosy.bin"
+;.end
+Gfx_MenuScreensVBK1:
+	INCBIN "build/menuScreensVBK1.2bpp"
+.end:

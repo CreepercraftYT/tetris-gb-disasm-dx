@@ -27,7 +27,7 @@ CopyASpriteSpecsToShadowOam:
 	ret                                                             ; $2682
 
 
-Copy1stSpriteSpecToSprite4:
+Copy1stSpriteSpecToSprite4::
 	ld   a, $01                                                     ; $2683
 	ldh  [hNumSpriteSpecs], a                                       ; $2685
 	ld   a, LOW(wOam+OAM_SIZEOF*4)                                  ; $2687
@@ -39,7 +39,7 @@ Copy1stSpriteSpecToSprite4:
 	ret                                                             ; $2695
 
 
-Copy2ndSpriteSpecToSprite8:
+Copy2ndSpriteSpecToSprite8::
 	ld   a, $01                                                     ; $2696
 	ldh  [hNumSpriteSpecs], a                                       ; $2698
 	ld   a, LOW(wOam+OAM_SIZEOF*8)                                  ; $269a
@@ -48,7 +48,29 @@ Copy2ndSpriteSpecToSprite8:
 	ldh  [hCurr_wOam_SpriteAddr], a                                 ; $26a0
 	ld   hl, wSpriteSpecs+SPR_SPEC_SIZEOF                           ; $26a2
 	call CopyToShadowOamBasedOnSpriteSpec                           ; $26a5
-	ret                                                             ; $26a8
+	ret     
+	
+Copy3rdSpriteSpecToSprite12::
+	ld   a, $01                                                     ; $2696
+	ldh  [hNumSpriteSpecs], a                                       ; $2698
+	ld   a, LOW(wOam+OAM_SIZEOF*12)                                  ; $269a
+	ldh  [hCurr_wOam_SpriteAddr+1], a                               ; $269c
+	ld   a, HIGH(wOam+OAM_SIZEOF*12)                                 ; $269e
+	ldh  [hCurr_wOam_SpriteAddr], a                                 ; $26a0
+	ld   hl, wSpriteSpecs+SPR_SPEC_SIZEOF*2                           ; $26a2
+	call CopyToShadowOamBasedOnSpriteSpec                           ; $26a5
+	ret; $26a8
+
+Copy4thSpriteSpecToSprite16::
+	ld   a, $01                                                     ; $2696
+	ldh  [hNumSpriteSpecs], a                                       ; $2698
+	ld   a, LOW(wOam+OAM_SIZEOF*16)                                  ; $269a
+	ldh  [hCurr_wOam_SpriteAddr+1], a                               ; $269c
+	ld   a, HIGH(wOam+OAM_SIZEOF*16)                                 ; $269e
+	ldh  [hCurr_wOam_SpriteAddr], a                                 ; $26a0
+	ld   hl, wSpriteSpecs+SPR_SPEC_SIZEOF*3                           ; $26a2
+	call CopyToShadowOamBasedOnSpriteSpec                           ; $26a5
+	ret
 
 
 DisplayBlackColumnFromHLdown:
@@ -85,7 +107,13 @@ SpriteSpecStruct_LPieceActive:
 
 
 SpriteSpecStruct_LPieceNext:
-	db $00, $80, $8f, SPRITE_SPEC_L_PIECE, $00, $00, $00, $ff
+	db $00, $70, $87, SPRITE_SPEC_L_PIECE, $00, $00, $00, $ff
+
+SpriteSpecStruct_LPieceGhost:
+	db $00, $18, $3f, SPRITE_SPEC_L_PIECE, $00, $00, $08, $ff
+
+SpriteSpecStruct_LPieceHold:
+	db $80, $88, $87, $fe, $00, $00, $08, $ff
 
 
 SpriteSpecStruct_GameMusicAType:
@@ -130,26 +158,26 @@ SpriteSpecStruct_LuigisFacingAway:
 
 
 SpriteSpecStruct_Dancers:
-	db $80, $3f, $40, SPRITE_SPEC_VIOLINIST_2, $00, $06
-	db $80, $3f, $20, SPRITE_SPEC_GUITARIST_1, $00, $06
-	db $80, $3f, $30, SPRITE_SPEC_DOUBLE_BASS_1, $00, $06
-	db $80, $77, $20, SPRITE_SPEC_BELLY_DRUM_1, $00, $06
-	db $80, $87, $48, SPRITE_SPEC_COUPLE_1, $00, $06
-	db $80, $87, $58, SPRITE_SPEC_CLAPPER_1, $00, $06
-	db $80, $67, $4d, SPRITE_SPEC_JUMPER_1, $00, $06
-	db $80, $67, $5d, SPRITE_SPEC_KICKER_1, $00, $06
-	db $80, $8f, $88, SPRITE_SPEC_SWORDSMAN_1, $00, $06
-	db $80, $8f, $98, SPRITE_SPEC_SWORDSMAN_2, $00, $06
+	db $80, $40, $40, SPRITE_SPEC_VIOLINIST_2, $00, $06
+	db $80, $40, $20, SPRITE_SPEC_GUITARIST_1, $00, $06
+	db $80, $40, $30, SPRITE_SPEC_DOUBLE_BASS_1, $00, $06
+	db $80, $78, $20, SPRITE_SPEC_BELLY_DRUM_1, $00, $06
+	db $80, $88, $48, SPRITE_SPEC_COUPLE_1, $00, $06
+	db $80, $88, $58, SPRITE_SPEC_CLAPPER_1, $00, $06
+	db $80, $68, $4d, SPRITE_SPEC_JUMPER_1, $00, $06
+	db $80, $68, $5d, SPRITE_SPEC_KICKER_1, $00, $06
+	db $80, $90, $88, SPRITE_SPEC_SWORDSMAN_1, $00, $06
+	db $80, $90, $98, SPRITE_SPEC_SWORDSMAN_2, $00, $06
 
 
 SpriteSpecStruct_ShuttleAndGas:
-	db $00, $5f, $57, SPRITE_SPEC_SHUTTLE, $00, $00
+	db $00, $60, $57, SPRITE_SPEC_SHUTTLE, $00, $00
 	db $80, $80, $50, SPRITE_SPEC_SMALL_LIFTOFF_GAS, $00, $03
 	db $80, $80, $60, SPRITE_SPEC_SMALL_LIFTOFF_GAS, $00, $23
 	
 	
 SpriteSpecStruct_RocketAndGas:
-	db $00, $6f, $57, SPRITE_SPEC_BIG_ROCKET, $00, $00
+	db $00, $70, $57, SPRITE_SPEC_BIG_ROCKET, $00, $00
 	db $80, $80, $55, SPRITE_SPEC_SMALL_LIFTOFF_GAS, $00, $03
 	db $80, $80, $5b, SPRITE_SPEC_SMALL_LIFTOFF_GAS, $00, $23
 	
@@ -211,7 +239,18 @@ LoadAsciiAndMenuScreenGfx:
 	ld   hl, Gfx_MenuScreens                                        ; $27b6
 	ld   de, _VRAM+$300                                             ; $27b9
 	ld   bc, Gfx_MenuScreens.end-Gfx_MenuScreens+$b0                ; $27bc
-	call CopyHLtoDE_BCbytes                                         ; $27bf
+	call CopyHLtoDE_BCbytes
+	ld a, 1
+	ld [rVBK], a
+	ld a, 4
+	ld [rROMB0], a
+	ld   hl, Gfx_MenuScreensVBK1                                        ; $27b6
+	ld   de, _VRAM                                             ; $27b9
+	ld   bc, Gfx_MenuScreensVBK1.end-Gfx_MenuScreensVBK1+$b0                ; $27bc
+	call CopyHLtoDE_BCbytes
+	xor a
+	ld [rVBK], a
+	ld [rROMB0], a                                         ; $27bf
 	ret                                                             ; $27c2
 
 
@@ -1077,3 +1116,298 @@ LoadTimeBasedPalettes::
 	ld c, 64
 	call CopyPalettesToCram   
 	ret
+
+;	SECTION "Rosy Retrospection Rotation Systems Data", ROMX, BANK[$04]
+SRS_KICKS:: ; L, J, T, S, Z
+    ; Y,X
+    ; +Y = Down, +X = Right
+    db 0,-8, -8,-8, 16,0, 16,-8 ; N -> E
+    db 0,8, 8,8, -16,0, -16,8 ; E -> S
+    db 0,8, -8,8, 16,0, 16,8 ; S -> W
+    db 0,-8, 8,-8, -16,0, -16,-8 ; W -> N
+    ; CW Kicks, Invert for CCW
+SRS_KICKS_I::
+    ; Y,X
+    ; +Y = Down, +X = Right
+    db 0,-16, 0,8, 8,-16, -16,8 ; N -> E
+    db 0,-8, 0,16, -16,-8, 8,16 ; E -> S
+    db 0,16, 0,-8, -8,16, 16,-8 ; S -> W
+    db 0,8, 0,-16, 16,8, -8,-16 ; W -> N
+    ; CW Kicks, Invert for CCW
+
+SRS_ClockWise::
+    ; Set The Amount Of Tests Performed to 0
+    xor a
+    ld [sPlaceholder], a
+    ; Check the Piece type
+    ld hl, wSpriteSpecs+SPR_SPEC_SpecIdx
+    ld a, [hl]
+    sra a
+    sra a
+    cp a, 2
+    jr z, .iPiece
+    ; Get The Offset
+    ld hl, wSpriteSpecs+SPR_SPEC_SpecIdx
+    ld a, [hl]
+    and a, 3
+    ld de, SRSKickOffsetTableCW
+    add a, e
+    ld e, a
+    ld a, [de]
+    ld hl, SRS_KICKS
+    ld d, 0
+    ld e, a
+    add hl, de
+    jr .applyKicks
+.iPiece
+    ; Get The Offset
+    ld hl, wSpriteSpecs+SPR_SPEC_SpecIdx
+    ld a, [hl]
+    and a, 3
+    ld de, SRSKickOffsetTableCW
+    add a, e
+    ld e, a
+    ld a, [de]
+    ld hl, SRS_KICKS_I
+    ld d, 0
+    ld e, a
+    add hl, de
+.applyKicks
+    ld de, wSpriteSpecs+SPR_SPEC_BaseYOffset
+    ld a, [de]
+;    ld [sPlaceholder], a
+    ld b, a
+    inc de
+    ld a, [de]
+;    ld [sPlaceholder+1], a
+    dec de
+    ld c, a
+.nextKick
+    ld de, wSpriteSpecs+SPR_SPEC_BaseYOffset
+    push bc
+    ldi a, [hl]
+    add a, b
+    ld [de], a
+    inc de
+    ldi a, [hl]
+    add a, c
+    ld [de], a
+    dec de
+    ; Check for collision
+    push hl
+    call Copy1stSpriteSpecToSprite4                             
+    call RetZIfNoCollisionForPiece                               
+    and  a
+    pop hl
+    pop bc
+    ret z
+    ld a, [sPlaceholder]
+    inc a
+    ld [sPlaceholder], a
+    cp a, 4
+    jp z, NoKick
+    jr .nextKick
+
+SRS_CounterClockWise::
+    ; Set The Amount Of Tests Performed to 0
+    xor a
+    ld [sPlaceholder], a
+    ; Check the Piece type
+    ld hl, wSpriteSpecs+SPR_SPEC_SpecIdx
+    ld a, [hl]
+    sra a
+    sra a
+    cp a, 2
+    jr z, .iPiece
+    ; Get The Offset
+    ld hl, wSpriteSpecs+SPR_SPEC_SpecIdx
+    ld a, [hl]
+    and a, 3
+    ld de, SRSKickOffsetTableCCW
+    add a, e
+    ld e, a
+    ld a, [de]
+    ld hl, SRS_KICKS
+    ld d, 0
+    ld e, a
+    add hl, de
+    jr .applyKicks
+.iPiece
+    ; Get The Offset
+    ld hl, wSpriteSpecs+SPR_SPEC_SpecIdx
+    ld a, [hl]
+    and a, 3
+    ld de, SRSKickOffsetTableCCW
+    add a, e
+    ld e, a
+    ld a, [de]
+    ld hl, SRS_KICKS_I
+    ld d, 0
+    ld e, a
+    add hl, de
+.applyKicks
+    ld de, wSpriteSpecs+SPR_SPEC_BaseYOffset
+    ld a, [de]
+;    ld [sPlaceholder], a
+    ld b, a
+    inc de
+    ld a, [de]
+;    ld [sPlaceholder+1], a
+    dec de
+    ld c, a
+.nextKick
+    ld de, wSpriteSpecs+SPR_SPEC_BaseYOffset
+    push bc
+    ldi a, [hl]
+    cpl
+	inc a
+    add a, b
+    ld [de], a
+    inc de
+    ldi a, [hl]
+    cpl
+	inc a
+    add a, c
+    ld [de], a
+    dec de
+    ; Check for collision
+	push hl
+    call Copy1stSpriteSpecToSprite4                             
+    call RetZIfNoCollisionForPiece                               
+    and  a
+    pop hl
+    pop bc
+    ret z
+    ld a, [sPlaceholder]
+    inc a
+    ld [sPlaceholder], a
+    cp a, 4
+    jp z, NoKick
+    jr .nextKick
+
+
+ARS_Tests::
+    ld de, wSpriteSpecs+SPR_SPEC_BaseYOffset
+    ld a, [de]
+;    ld [sPlaceholder], a
+    ld b, a
+    inc de
+    ld a, [de]
+;    ld [sPlaceholder+1], a
+    ld c, a
+    ld hl, wSpriteSpecs+SPR_SPEC_SpecIdx
+    ld a, [hl]
+    sra a
+    sra a
+    cp a, 2
+    jr z, .iPiece
+.tryRight
+	push bc
+    ld a, 8
+    add a, c
+    ld [de], a
+    ; Check for collision
+	push de
+    call Copy1stSpriteSpecToSprite4                             
+    call RetZIfNoCollisionForPiece                               
+    and  a
+	pop de
+    pop bc
+    ret z
+.tryLeft
+    push bc
+    ld a, -8
+    add a, c
+    ld [de], a
+    ; Check for collision
+	push de
+    call Copy1stSpriteSpecToSprite4                             
+    call RetZIfNoCollisionForPiece                               
+    and  a
+	pop de
+    pop bc
+    ret z
+    ld hl, wSpriteSpecs+SPR_SPEC_SpecIdx
+    ld a, [hl]
+    sra a
+    sra a
+    cp a, 6
+    jr z, .tryUpT
+    jp NoKick
+.tryUpT
+    push bc
+	ld a, c
+	ld [de], a
+    dec de
+    ld a, -8
+    add a, b
+    ld [de], a
+    ; Check for collision
+	push de
+    call Copy1stSpriteSpecToSprite4                             
+    call RetZIfNoCollisionForPiece                               
+    and  a
+	pop de
+    pop bc
+    ret z
+    jp NoKick
+.iPiece
+    ld hl, wSpriteSpecs+SPR_SPEC_SpecIdx
+    ld a, [hl]
+    and a, 1
+    jr nz, .verticalKicks
+.horizontalKicks
+    push bc
+    ld a, -8
+    add a, c
+    ld [de], a
+	push de
+    call Copy1stSpriteSpecToSprite4                             
+    call RetZIfNoCollisionForPiece                               
+    and  a
+	pop de
+	pop bc
+    ret z
+    ld a, 16
+	push bc
+    add a, c
+    ld [de], a
+	push de
+    call Copy1stSpriteSpecToSprite4                             
+    call RetZIfNoCollisionForPiece                               
+    and  a
+	pop de
+    pop bc
+    ret z
+    jp NoKick
+.verticalKicks
+    push bc
+	dec de
+    ld a, -8
+    add a, b
+    ld [de], a
+	push de
+    call Copy1stSpriteSpecToSprite4                             
+    call RetZIfNoCollisionForPiece    
+	pop de                           
+    and  a
+	pop bc
+    ret z
+    ld a, -16
+	push bc
+    add a, b
+    ld [de], a
+	push de
+    call Copy1stSpriteSpecToSprite4                             
+    call RetZIfNoCollisionForPiece                               
+    and  a
+	pop de
+    pop bc
+    ret z
+    jp NoKick
+
+
+SRSKickOffsetTableCW: ; yes, i need to do this :skull:
+    db 24, 16, 8, 0 ; N, W, S, E
+SRSKickOffsetTableCCW:
+    db 0, 24, 16, 8 ; N, W, S, E

@@ -383,7 +383,30 @@ VBlankInterruptHandler:
 	pop  hl                                                         ; $0207
 	pop  de                                                         ; $0208
 	pop  bc                                                         ; $0209
-	pop  af                                                         ; $020a
+	pop  af
+; prevent crash
+    ld [sPlaceholder], a
+	ld a, h
+	ld [sPlaceholder+1], a
+	ld a, l
+	ld [sPlaceholder+2], a
+	ld hl, sp+0
+	ld a, l
+	cp a, $f9
+	jr nc, .noCrash
+.canCrash
+	ld sp, $cff5
+	pop  hl                                                         ; $0207
+	pop  de                                                         ; $0208
+	pop  bc                                                         ; $0209
+	pop  af
+	reti
+.noCrash        
+	ld a, [sPlaceholder+2]
+	ld l, a
+	ld a, [sPlaceholder+1]
+	ld h, a
+	ld a, [sPlaceholder]                                                  ; $020a
 	reti                                                            ; $020b
 
 
@@ -488,7 +511,7 @@ Reset:
 	xor a
 	ld [rRAMB], a
 	ld a, c
-	ld [sPlaceholder], a
+	ld [sPlaceholder+3], a
 	xor  a                                                          ; $025a
 	ld   hl, $dfff                                                  ; $025b
 	ld   b, $00                                                     ; $025e
@@ -588,9 +611,10 @@ MainLoop:
 ; main game loop updates
     ld hl, $980f                     ; $01d8
 	call UpdateClock
-	call LoadPieceYandXPositionsToSram
+	call LoadPieceYandXPositionsToWram
 	call PollInput                                                  ; $02c4
-	call ProcessGameState                                           ; $02c7
+	call ProcessGameState
+;	call AdjustGhostPiece                                           ; $02c7
 	call ThunkUpdateSound                                           ; $02ca
 
 ; standard soft reset
@@ -1118,15 +1142,26 @@ GameState0a_InGameInit:
 	ld   [hl], "<3"                                                 ; $1a6f
 
 .afterHardModeCheck:
-; copy sprite specs over for active and next piece
+; copy sprite specs over for active, next, ghost and hold piece
 	ld   hl, wSpriteSpecs                                           ; $1a71
 	ld   de, SpriteSpecStruct_LPieceActive                          ; $1a74
 	call CopyDEintoHLwhileFFhNotFound                               ; $1a77
 
 	ld   hl, wSpriteSpecs+SPR_SPEC_SIZEOF                           ; $1a7a
 	ld   de, SpriteSpecStruct_LPieceNext                            ; $1a7d
-	call CopyDEintoHLwhileFFhNotFound                               ; $1a80
-
+	call CopyDEintoHLwhileFFhNotFound 
+; If Not in Rosy Retro mode, ignore the following
+	ld a, [sOptionRosyRetroMode]
+	and a
+	jr z, .notRosyRetro
+	ld   hl, wSpriteSpecs+SPR_SPEC_SIZEOF*2                           ; $1a7a
+	ld   de, SpriteSpecStruct_LPieceGhost                            ; $1a7d
+	call CopyDEintoHLwhileFFhNotFound
+	
+	ld   hl, wSpriteSpecs+SPR_SPEC_SIZEOF*3                           ; $1a7a
+	ld   de, SpriteSpecStruct_LPieceHold                            ; $1a7d
+	call CopyDEintoHLwhileFFhNotFound; $1a80
+.notRosyRetro
 ; address of num lines
 	ld   hl, _SCRN0+$151                                            ; $1a83
 
@@ -1419,6 +1454,8 @@ PopulateGameScreenWithRandomBlocks:
 	cp   LOW($9a2c)                                                 ; $1bc9
 	jr   nz, .toNextRow                                             ; $1bcb
 
+; Update the ghost piece
+    call AdjustGhostPiece
 	ret                                                             ; $1bcd
 
 
@@ -1453,7 +1490,10 @@ InGameCheckResetAndPause:
 	bit  PADB_SELECT, a                                             ; $1bf4
 	ret  z                                                          ; $1bf6
 
-; select pressed - hides next piece
+; select pressed - hides next piece or holds piece
+    ld a, [sOptionRosyRetroMode]
+	and a
+	jp nz, HoldPiece
 	ld   a, [wNextPieceHidden]                                      ; $1bf7
 	xor  $01                                                        ; $1bfa
 	ld   [wNextPieceHidden], a                                      ; $1bfc
@@ -1532,9 +1572,19 @@ InGameCheckResetAndPause:
 	ld   [wSpriteSpecs+SPR_SPEC_SIZEOF], a                          ; $1c4d
 
 .setCurrPieceVisibilityAndSend2PiecesToOam:
-	ld   [wSpriteSpecs], a                                          ; $1c50
+	ld   [wSpriteSpecs], a     
+	ld   [wSpriteSpecs+SPR_SPEC_SIZEOF*2], a
+	ld   [wSpriteSpecs+SPR_SPEC_SIZEOF*3], a                                      ; $1c50
 	call Copy1stSpriteSpecToSprite4                                 ; $1c53
-	call Copy2ndSpriteSpecToSprite8                                 ; $1c56
+	call Copy2ndSpriteSpecToSprite8
+	ld a, [sOptionRosyRetroMode]
+	and a
+	ret z 
+	call Copy3rdSpriteSpecToSprite12 
+	ld a, [wSpriteSpecs+SPR_SPEC_SIZEOF*3+SPR_SPEC_SpecIdx]
+	cp a, $fe
+	ret z
+	call Copy4thSpriteSpecToSprite16                               ; $1c56
 	ret                                                             ; $1c59
 
 .gameUnPaused:
@@ -2306,7 +2356,7 @@ IsDMG::
 	ld a, %11100100
 	ld [rBGP], a 
 	jr IsDMG
-LoadPieceYandXPositionsToSram::
+LoadPieceYandXPositionsToWram::
 	ld   hl, wOam+OAM_SIZEOF*4
 	ld   de, sPieceYandX
 	ld   b, $04
@@ -2324,8 +2374,21 @@ LoadPieceYandXPositionsToSram::
 	dec b
 	jr nz, .nextPos
 	ret  
+
+NoKick:
+	ld de, wSpriteSpecs+SPR_SPEC_BaseYOffset
+    ld a, b
+    ld [de], a
+    inc de
+    ld a, c
+    ld [de], a
+    call Copy1stSpriteSpecToSprite4
+    ld a, 1
+    ret
+
 INCLUDE "code/gfx.s"
 
 INCLUDE "data/spriteData.s"
 INCLUDE "data/gfxAndLayouts.s"
 INCLUDE "data/demoPieces.s"
+;INCLUDE "code/rosyRetroRotationSystems.s"

@@ -52,7 +52,11 @@ DisplayRocketScene:
 	ld [rROMB0], a
 
 ; display gfx with lcd off
-    call TurnOffLCD          
+    ld a, [rLY]
+    cp a, 0
+    jr z, .skipLCDOff ; The LCD is off already, calling the function again will crash the game
+    call TurnOffLCD
+.skipLCDOff          
     ld a, 1
     ld [rROMB0], a                                    ; $11b2
     ld   hl, Gfx_RocketScene                                     ; $11b5
@@ -161,7 +165,7 @@ GameState29_ShuttleSceneFlashBigCloudsRemovePlatforms:
 
 ; clear platforms
     ld   hl, _SCRN1+$108                                         ; $1229
-    ld   b, TILE_EMPTY                                           ; $122c
+    ld   b, $DB                                           ; $122c
     call StoreBinHLwhenLCDFree                                   ; $122e
     ld   hl, _SCRN1+$109                                         ; $1231
     call StoreBinHLwhenLCDFree                                   ; $1234

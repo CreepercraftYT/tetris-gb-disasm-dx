@@ -1,7 +1,7 @@
 
 GameState24_CopyrightDisplay::
 ; check for RTC
-    ld a, [sPlaceholder]
+    ld a, [sPlaceholder+3]
 	ld c, a
 	ld a, 09
 	ld [rRAMB], a
@@ -101,6 +101,8 @@ GameState35_CopyrightCanContinue:
 
 
 GameState06_TitleScreenInit::
+	ld a, $ff
+	ld [wPiecesLeftInTheBag], a
 ; switch to bank 1 for graphics data	
 	ld a, BANK_GRAPHICS_AND_LAYOUTS
 	ld [rROMB0], a
@@ -889,6 +891,8 @@ GameState07_TitleScreenMain:
 	ld   [wOam+OAM_TILE_IDX], a
 	ld a, OPTION_TIME_ID
 	ld [hSelectedOption], a 
+	xor a
+	ld [rRAMB], a
     ret
 SeparateTens::
 ; in: a: value <100
