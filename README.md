@@ -8,6 +8,25 @@ It will also look a lot more like the Original Tetris DX.
 W.I.P
 
 Hard Mode ("Heart" mode) is now enabled by holding Up on the title screen
+
+# Credits
+Inspired by Tetris DX
+RTC Functions inspired by Pokemon G/S/C
+
+Original Tetris Rosy Retrospection hack by Ospin
+Special Thanks to:
+Leafycup: Background Colors
+Tolstoj: Testing
+gbdev discord server: tips and certain pieces of code
+
+In Memory of RHDN (ROMHacking.net)
+
+# Options
+"Turn On The Lights": uses Daytime piece palettes during night
+"Classic Rule": uses Sega Colors instead of Guideline colors
+"No Day-Night Cycle": disables time-based palettes
+"Rosy Retro. Mode": enables Rosy Retrospection Features, if "Classic Rule" is enabled along with this one, the ruleset used will be similar to the one in Tetris: The Grand Master 3 Terror-Instinct by Arika
+
 ## Common
 * Place `tetris.gb` in the `tools/` directory, and `web/` directory
 * Former is used for scripts, and `tools/cmp.sh`, and the latter for web visualisations
