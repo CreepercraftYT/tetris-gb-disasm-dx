@@ -83,8 +83,3 @@ In Memory of RHDN (ROMHacking.net)
   * some functions
   * palettes
   * `Leftover space - $3e50 (15952) bytes`
-
-`Total space added - $8027 (32807) bytes`
-
-## Note on improvements
-The project serves to describe everything that makes the game function as it does. Some things are not completely clear from the outset. If you need a full guide on a particular concept, eg sound engine, or some part of the disassembly needs further clarification, please feel free to raise an issue
